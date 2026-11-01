@@ -32,6 +32,7 @@ test("administrator can hide and restore wishlists while participants keep acces
     await expect(toggle).toBeChecked();
     await toggle.uncheck();
     await expect(toggle).not.toBeChecked();
+    await expect(page.getByRole("status").filter({ hasText: "Listas de desejos ocultas. A escolha dos presentes é livre." })).toBeVisible();
     await page.reload();
     await expect(toggle).not.toBeChecked();
     await expect(page.getByText("Valor atual: R$", { exact: false })).toBeVisible();
@@ -48,6 +49,7 @@ test("administrator can hide and restore wishlists while participants keep acces
     await expect(visitor.getByText(/ainda não adicionou uma lista/)).toHaveCount(0);
     await toggle.check();
     await expect(toggle).toBeChecked();
+    await expect(page.getByRole("status").filter({ hasText: "Listas de desejos visíveis para o grupo." })).toBeVisible();
     await visitor.evaluate(() => window.dispatchEvent(new Event("focus")));
     await expect(visitor.getByLabel("Nome do item 1")).toHaveValue(savedItem.title);
     await expect(visitor.getByRole("heading", { name: "Lista de desejos de Bia Silva:" })).toBeVisible();

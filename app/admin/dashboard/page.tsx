@@ -103,8 +103,10 @@ export default function AdminDashboard() {
   }
 
   async function toggleWishlists(enabled: boolean) {
+    const previous = wishlistsEnabled;
+    setWishlistsEnabled(enabled);
     const data = await action("wishlists", `/api/groups/${group.id}`, "PATCH", { wishlistsEnabled: enabled }, enabled ? "Listas de desejos visíveis para o grupo." : "Listas de desejos ocultas. A escolha dos presentes é livre.");
-    if (data) setWishlistsEnabled(data.group.wishlistsEnabled);
+    setWishlistsEnabled(data ? data.group.wishlistsEnabled : previous);
   }
 
   if (loading) return <main className="min-h-screen flex items-center justify-center text-santa-gold">Carregando...</main>;
