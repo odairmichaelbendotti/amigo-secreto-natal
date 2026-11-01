@@ -2,28 +2,29 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Free Secret Santa Generator - Organize Gift Exchanges Online | Secret Santa App",
-  description: "Free online Secret Santa generator for families, friends, and offices. Create gift exchange groups, manage wishlists, and automatically assign Secret Santa partners. No registration required!",
-  keywords: "secret santa generator, free secret santa, online gift exchange, secret santa app, family gift exchange, office secret santa, wishlist manager, secret santa organizer, christmas gift exchange, holiday gift exchange",
+  title: "Gerador de Amigo Secreto grátis - Organize sua troca de presentes online",
+  description: "Sorteio de amigo secreto online e grátis para famílias, amigos e colegas de trabalho. Crie grupos, monte listas de desejos e faça o sorteio automaticamente. Entrada por convite!",
+  keywords: "amigo secreto, sorteio de amigo secreto, amigo secreto grátis, amigo secreto online, troca de presentes, amigo secreto em família, amigo secreto no trabalho, lista de desejos, presentes de Natal",
   openGraph: {
-    title: "Free Secret Santa Generator - Organize Gift Exchanges Online",
-    description: "Create and manage Secret Santa gift exchanges for your family, friends, or office. Free, easy to use, and no registration required!",
+    locale: "pt_BR",
+    title: "Gerador de Amigo Secreto grátis - Sorteio online",
+    description: "Organize o amigo secreto da família, dos amigos ou do trabalho. Grátis, com convites por link e aprovação de participantes!",
     url: "https://santa.wagnerway.co.za",
-    siteName: "Secret Santa Generator",
+    siteName: "Gerador de Amigo Secreto",
     type: "website",
     images: [
       {
         url: "https://santa.wagnerway.co.za/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Secret Santa Generator - Free Online Gift Exchange"
+        alt: "Gerador de Amigo Secreto - Sorteio online grátis"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Free Secret Santa Generator - Organize Gift Exchanges Online",
-    description: "Create and manage Secret Santa gift exchanges for your family, friends, or office. Free, easy to use, and no registration required!",
+    title: "Gerador de Amigo Secreto grátis - Sorteio online",
+    description: "Organize o amigo secreto da família, dos amigos ou do trabalho. Grátis, com convites por link e aprovação de participantes!",
     images: ["https://santa.wagnerway.co.za/og-image.png"]
   },
   robots: {
@@ -43,243 +44,129 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
+  const faqs = [
+    {
+      q: "O que é um gerador de amigo secreto?",
+      a: "É uma ferramenta online grátis que sorteia quem cada participante vai presentear. Cada pessoa tira alguém em segredo, deixando a troca de presentes divertida e cheia de surpresas. O aplicativo cuida de tudo: da criação do grupo às listas de desejos e ao sorteio."
+    },
+    {
+      q: "Como funciona o sorteio de amigo secreto?",
+      a: "Crie sua conta com e-mail e senha e organize um grupo. Compartilhe o link do grupo. Cada convidado cria uma conta ou entra com e-mail e senha e solicita participação. O administrador aprova ou não cada solicitação. As pessoas aprovadas podem montar suas listas de desejos. Quando todos estiverem prontos, o administrador realiza o sorteio com um clique. Cada participante vê quem tirou e a lista de desejos dessa pessoa."
+    },
+    {
+      q: "O aplicativo de amigo secreto é grátis?",
+      a: "Sim! Grupos de até 10 participantes podem usar o aplicativo de graça, com grupos ilimitados, listas de desejos e sorteio automático. Para grupos maiores, você pode liberar participantes ilimitados com um pagamento único de US$ 10."
+    },
+    {
+      q: "Preciso criar uma conta ou fazer cadastro?",
+      a: "Sim. Use seu nome completo, e-mail e uma senha com pelo menos 4 caracteres. Após a aprovação, o grupo fica vinculado à sua conta e aparece em Meus grupos em qualquer dispositivo."
+    },
+    {
+      q: "Quantas pessoas podem participar do amigo secreto?",
+      a: "São necessárias pelo menos 2 pessoas aprovadas. Com apenas 2, um necessariamente tira o outro; com 3 ou mais, há surpresa sobre quem cada pessoa vai tirar. O plano grátis permite até 10 participantes por grupo. Para grupos maiores, como os do trabalho, você pode liberar participantes ilimitados com um pagamento único de US$ 10."
+    },
+    {
+      q: "Posso definir o valor do presente para o grupo?",
+      a: "Sim! O administrador pode definir o valor do presente em reais, dólares, euros e várias outras moedas. O valor fica visível para todos os participantes, para que o grupo saiba quanto gastar."
+    },
+    {
+      q: "Como funcionam as listas de desejos?",
+      a: "Cada participante pode adicionar até 5 itens à sua lista de desejos, com nomes e links dos produtos. Depois do sorteio, quem tirou você pode ver sua lista e escolher um presente com mais facilidade."
+    },
+    {
+      q: "Posso usar o aplicativo para o amigo secreto do trabalho?",
+      a: "Sim! O organizador cria um grupo e compartilha o link de convite com os colegas. Cada pessoa cria sua conta com nome completo, e-mail e senha e solicita aprovação. Depois de aprovada, monta sua lista de desejos e descobre quem tirou. Como tudo acontece online, quem trabalha a distância também pode participar."
+    },
+    {
+      q: "O sorteio é aleatório e justo?",
+      a: "Sim. O sorteio distribui os participantes aleatoriamente, garantindo que ninguém tire a si mesmo. Cada pessoa presenteia exatamente uma pessoa e também recebe exatamente um presente."
+    },
+    {
+      q: "É possível refazer o sorteio?",
+      a: "Sim! O administrador pode excluir os resultados pelo painel e realizar um novo sorteio. Isso é útil quando os participantes mudam ou quando alguém descobre por engano o resultado de outra pessoa."
+    },
+    {
+      q: "O resultado do meu sorteio fica em segredo?",
+      a: "Sim. Cada participante só vê quem tirou ao entrar na sua conta. Os demais participantes não conseguem ver quem presenteia quem. O administrador pode consultar todos os resultados para organizar o grupo."
+    },
+    {
+      q: "O aplicativo funciona em celulares e tablets?",
+      a: "Sim! O aplicativo se adapta a celulares, tablets e computadores. Você pode montar sua lista de desejos e consultar quem tirou de qualquer dispositivo com navegador."
+    }
+  ];
+
   const webAppStructuredData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "Secret Santa Generator",
-    "description": "Free online Secret Santa generator to organize gift exchanges for families, friends, and offices. Create groups, manage wishlists, and automatically assign Secret Santa partners.",
-    "url": "https://santa.wagnerway.co.za",
-    "applicationCategory": "Lifestyle",
-    "operatingSystem": "All",
-    "offers": [
-      {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD",
-        "description": "Free plan — up to 10 participants per group"
-      },
-      {
-        "@type": "Offer",
-        "price": "10",
-        "priceCurrency": "USD",
-        "description": "Unlimited plan — unlimited participants, one-time payment"
-      }
+    name: "Gerador de Amigo Secreto",
+    description: "Organize seu amigo secreto online e de graça. Crie grupos, monte listas de desejos e faça o sorteio com sua família, seus amigos ou colegas de trabalho.",
+    inLanguage: "pt-BR",
+    url: "https://santa.wagnerway.co.za",
+    applicationCategory: "Lifestyle",
+    operatingSystem: "All",
+    offers: [
+      { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Plano grátis: até 10 participantes por grupo" },
+      { "@type": "Offer", price: "10", priceCurrency: "USD", description: "Plano ilimitado: participantes ilimitados, com pagamento único" }
     ],
-    "featureList": [
-      "Create unlimited Secret Santa groups",
-      "Automatic random assignment algorithm",
-      "Wishlist management with links",
-      "Email magic link authentication",
-      "Code-based simple login",
-      "Mobile responsive design",
-      "Multi-currency budget support",
-      "No registration required"
+    featureList: [
+      "Crie grupos ilimitados de amigo secreto",
+      "Sorteio automático e aleatório",
+      "Listas de desejos com links dos produtos",
+      "Convites por link com aprovação",
+      "Acesso com e-mail e senha",
+      "Interface adaptada para celular",
+      "Valor do presente em várias moedas",
+      "Entrada por convite"
     ],
-    "provider": {
-      "@type": "Organization",
-      "name": "Secret Santa Generator",
-      "url": "https://santa.wagnerway.co.za"
-    },
-    "screenshot": "https://santa.wagnerway.co.za/og-image.png",
-    "softwareVersion": "2.0",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "1250",
-      "bestRating": "5",
-      "worstRating": "1"
-    }
+    provider: { "@type": "Organization", name: "Gerador de Amigo Secreto", url: "https://santa.wagnerway.co.za" },
+    screenshot: "https://santa.wagnerway.co.za/og-image.png",
+    softwareVersion: "2.0",
+    aggregateRating: { "@type": "AggregateRating", ratingValue: "4.8", ratingCount: "1250", bestRating: "5", worstRating: "1" }
   };
 
   const faqStructuredData = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "What is a Secret Santa generator?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "A Secret Santa generator is a free online tool that randomly assigns gift-giving partners within a group. Each person is secretly assigned another person to buy a gift for, making holiday gift exchanges fun, fair, and surprising. Our Secret Santa app handles the entire process digitally."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How does the Secret Santa Generator work?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Simply create a group, add participants with their names and optional emails, share the invite code, and click generate. Our algorithm randomly assigns each person a unique gift recipient, ensuring no one gets themselves and everyone has exactly one person to buy for."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is this Secret Santa app free?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, our Secret Santa generator is free for groups of up to 10 participants. If you need more than 10 people in a group, you can unlock unlimited participants with a one-time $10 payment."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Do I need to create an account or register?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "No registration is required. Group admins set a password during group creation, and participants receive unique login codes. You can also optionally use email magic links for passwordless login."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How many people can participate in a Secret Santa group?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "You need a minimum of 3 people to generate assignments. The free plan supports up to 10 participants per group. For larger groups, you can unlock unlimited participants with a one-time $10 payment."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Can I set a gift budget for the group?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes! Admins can set a gift budget with multi-currency support including USD, EUR, GBP, ZAR, and many more. The budget is displayed to all participants so everyone knows the spending limit."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How do wishlists work?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Each participant can add up to 5 items to their wishlist, including item names and direct links to products. When Secret Santas are assigned, each giver can see their recipient's wishlist for gift inspiration."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Can I use this for office Secret Santa?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Absolutely! Our Secret Santa generator is perfect for office gift exchanges. The admin creates a group, shares the invite code with coworkers, and everyone can join, create wishlists, and discover their Secret Santa assignment."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is the Secret Santa assignment truly random?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, our algorithm uses a secure random assignment system that ensures every participant is randomly assigned a unique recipient. No one is assigned to themselves, and every person receives exactly one gift."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Can assignments be regenerated?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, admins can delete existing assignments and regenerate new ones at any time from the admin dashboard. This is useful if participants change or if you want a fresh set of assignments."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is my Secret Santa assignment kept secret?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Absolutely. Each participant can only see their own assignment when they log in. The admin can see all assignments for management purposes, but regular participants only see who they are buying for."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Does this work on mobile phones?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes! Our Secret Santa app is fully responsive and works perfectly on smartphones, tablets, and desktop computers. Participants can manage their wishlists and check assignments from any device."
-        }
-      }
-    ]
+    inLanguage: "pt-BR",
+    mainEntity: faqs.map(({ q, a }) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a }
+    }))
   };
 
   const howToStructuredData = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    "name": "How to Organize a Secret Santa Gift Exchange Online",
-    "description": "Step-by-step guide to creating and managing a Secret Santa gift exchange using our free online generator.",
-    "totalTime": "PT5M",
-    "estimatedCost": {
-      "@type": "MonetaryAmount",
-      "currency": "USD",
-      "value": "0"
-    },
-    "step": [
+    name: "Como organizar um amigo secreto online",
+    description: "Passo a passo para criar e organizar um amigo secreto com nosso sorteador online grátis.",
+    inLanguage: "pt-BR",
+    totalTime: "PT5M",
+    estimatedCost: { "@type": "MonetaryAmount", currency: "USD", value: "0" },
+    step: [
       {
         "@type": "HowToStep",
-        "name": "Create Your Secret Santa Group",
-        "text": "Visit the Secret Santa Generator and click 'Create New Group'. Enter your group name, year, and set an admin password. You'll receive a unique invite code to share with participants.",
-        "url": "https://santa.wagnerway.co.za/create",
-        "position": 1
+        name: "Crie seu grupo de amigo secreto",
+        text: "Clique em Criar novo grupo. Entre ou crie sua conta com nome completo, e-mail e senha. Informe o nome do grupo e o ano. Você receberá um link de convite para compartilhar com os participantes.",
+        url: "https://santa.wagnerway.co.za/create",
+        position: 1
       },
       {
         "@type": "HowToStep",
-        "name": "Add Participants and Share Invite Codes",
-        "text": "As an admin, add all participants to your group with their names and optional email addresses. Share the group invite code and individual login codes with each person so they can join and create their wishlists.",
-        "url": "https://santa.wagnerway.co.za/admin/dashboard",
-        "position": 2
+        name: "Compartilhe o link e aprove as solicitações",
+        text: "Copie o link do grupo no painel e compartilhe com os convidados. Cada pessoa informa seu nome completo. Aprove ou não as solicitações recebidas.",
+        url: "https://santa.wagnerway.co.za/admin/dashboard",
+        position: 2
       },
       {
         "@type": "HowToStep",
-        "name": "Generate Secret Santa Assignments",
-        "text": "Once all participants have joined and created their wishlists, click 'Generate Assignments' in the admin dashboard. The algorithm will randomly assign each person a Secret Santa recipient. Everyone can then log in to see who they're buying for and view their recipient's wishlist.",
-        "url": "https://santa.wagnerway.co.za/admin/dashboard",
-        "position": 3
+        name: "Realize o sorteio do amigo secreto",
+        text: "Quando todos estiverem no grupo e tiverem montado suas listas de desejos, clique em Realizar sorteio no painel do administrador. Depois, cada participante pode entrar para descobrir quem tirou e conferir a lista de desejos dessa pessoa.",
+        url: "https://santa.wagnerway.co.za/admin/dashboard",
+        position: 3
       }
     ]
   };
-
-  const faqs = [
-    {
-      q: "What is a Secret Santa generator?",
-      a: "A Secret Santa generator is a free online tool that randomly assigns gift-giving partners within a group. Each person is secretly assigned another person to buy a gift for, making holiday gift exchanges fun, fair, and surprising. Our Secret Santa app handles the entire process digitally, from group creation to wishlist management and random assignments."
-    },
-    {
-      q: "How does the Secret Santa Generator work?",
-      a: "It's simple! Create a group and set an admin password. Then add participants with their names and optional email addresses. Share the invite code with your group. Each person logs in to create their wishlist. When everyone is ready, the admin clicks one button to generate random assignments. Each participant then sees who they're buying for and can view their recipient's wishlist."
-    },
-    {
-      q: "Is this Secret Santa app free?",
-      a: "Yes, our Secret Santa generator is free for groups of up to 10 participants. You get unlimited groups, wishlist management, and random assignments at no cost. If you need more than 10 people in a group, you can unlock unlimited participants with a one-time $10 payment."
-    },
-    {
-      q: "Do I need to create an account or register?",
-      a: "No registration is required! Group admins set a password during group creation, and participants receive unique login codes. You can also optionally use email magic links for passwordless login, making it even easier to participate."
-    },
-    {
-      q: "How many people can participate in a Secret Santa group?",
-      a: "You need a minimum of 3 people to generate assignments. The free plan supports up to 10 participants per group. For larger groups like office parties, you can unlock unlimited participants with a one-time $10 payment."
-    },
-    {
-      q: "Can I set a gift budget for my Secret Santa group?",
-      a: "Absolutely! Admins can set a gift budget with multi-currency support including USD, EUR, GBP, ZAR, CAD, AUD, and many more currencies. The budget is displayed to all participants so everyone knows the spending limit for their gift."
-    },
-    {
-      q: "How do wishlists work in the Secret Santa app?",
-      a: "Each participant can add up to 5 items to their personal wishlist, including item names and direct links to products online. When Secret Santa assignments are generated, each gift giver can see their assigned recipient's wishlist, making it easy to choose the perfect gift."
-    },
-    {
-      q: "Can I use this for an office Secret Santa?",
-      a: "Our Secret Santa generator is perfect for office gift exchanges! The organizer creates a group, shares the invite code with coworkers via email or Slack, and everyone can join at their convenience. The digital format means no awkward paper draws and remote team members can participate too."
-    },
-    {
-      q: "Is the Secret Santa assignment truly random and fair?",
-      a: "Yes, our algorithm uses a cryptographically secure random assignment system that ensures every participant is randomly assigned a unique recipient. No one is assigned to themselves, and every person both gives and receives exactly one gift. The assignments are completely unbiased."
-    },
-    {
-      q: "Can Secret Santa assignments be regenerated?",
-      a: "Yes! Admins can delete existing assignments and regenerate new random ones at any time from the admin dashboard. This is useful if participants change, if someone accidentally sees another's assignment, or if you simply want a fresh set of pairings."
-    },
-    {
-      q: "Is my Secret Santa assignment kept private and secret?",
-      a: "Absolutely. Each participant can only see their own Secret Santa assignment when they log in with their unique code. Other participants cannot see who is buying for whom. The admin can view all assignments for management purposes, but regular participants only see their own assigned recipient."
-    },
-    {
-      q: "Does this Secret Santa app work on mobile phones and tablets?",
-      a: "Yes! Our Secret Santa app is fully responsive and works beautifully on smartphones, tablets, and desktop computers. Participants can create wishlists, check their assignments, and manage their Secret Santa experience from any device with a web browser."
-    }
-  ];
 
   return (
     <>
@@ -299,6 +186,10 @@ export default function Home() {
       <div className="min-h-screen bg-santa-dark text-santa-snow overflow-x-hidden">
         {/* Hero Section */}
         <header className="relative overflow-hidden">
+          <nav className="relative z-10 max-w-6xl mx-auto px-6 pt-5 flex items-center justify-end gap-5">
+            <Link href="/groups" className="text-sm text-gray-300 hover:text-santa-gold">Meus grupos</Link>
+            <Link href="/login" className="rounded-xl bg-santa-gold px-5 py-3 font-bold text-santa-dark hover:bg-santa-gold-dark transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-santa-gold/40">Fazer login</Link>
+          </nav>
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-[10%] text-4xl animate-twinkle">*</div>
             <div className="absolute top-20 left-[30%] text-2xl animate-twinkle" style={{ animationDelay: '0.5s' }}>*</div>
@@ -307,21 +198,27 @@ export default function Home() {
             <div className="absolute top-12 left-[90%] text-4xl animate-twinkle" style={{ animationDelay: '0.3s' }}>*</div>
           </div>
 
-          <div className="container mx-auto px-4 py-20 relative z-10">
+          <div className="container mx-auto px-4 py-10 md:py-20 relative z-10">
             <div className="text-center max-w-4xl mx-auto">
               <div className="text-7xl mb-6">🎅</div>
               <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 font-display">
-                <span className="text-santa-red">Secret</span>{" "}
-                <span className="text-santa-green">Santa</span>{" "}
-                <span className="text-santa-gold">Generator</span>
+                <span className="text-santa-gold">Gerador</span> de{" "}
+                <span className="text-santa-red">Amigo</span>{" "}
+                <span className="text-santa-green">Secreto</span>
               </h1>
               <p className="text-lg sm:text-2xl md:text-3xl text-santa-gold mb-4 font-semibold">
-                Free Online Gift Exchange Organizer
+                Organize sua troca de presentes online e de graça
               </p>
+              <div className="max-w-2xl mx-auto mt-8 mb-8 rounded-2xl border border-santa-gold/50 bg-santa-gold/10 p-6 sm:p-8">
+                <h2 className="text-2xl font-bold text-santa-snow mb-2">Quer acessar seu amigo secreto?</h2>
+                <p className="text-gray-300 mb-5">Faça login com o e-mail e a senha do seu cadastro. Depois, escolha seu grupo em Meus grupos.</p>
+                <Link href="/login" className="inline-flex w-full min-h-[60px] items-center justify-center gap-3 rounded-xl bg-santa-gold px-5 py-4 text-lg font-bold text-santa-dark shadow-lg shadow-santa-gold/20 hover:bg-santa-gold-dark transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-santa-gold/40">
+                  Fazer login para entrar no grupo <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+
               <p className="text-lg md:text-xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
-                Create magical Secret Santa experiences for your family, friends, or office.
-                Our free secret santa app handles everything &mdash; from random assignments to wishlist management.
-                No registration required, just pure holiday fun!
+                Organize um amigo secreto especial com sua família, seus amigos ou colegas de trabalho. Compartilhe o convite, aprove os participantes e prepare os presentes!
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-12">
@@ -330,12 +227,12 @@ export default function Home() {
                   className="group bg-gradient-to-br from-santa-green to-santa-green-dark p-8 rounded-2xl card-glow transition-all duration-300 hover:scale-105"
                 >
                   <div className="text-5xl mb-4">🎄</div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Create New Group</h2>
+                  <h2 className="text-2xl font-bold text-white mb-2">Criar novo grupo</h2>
                   <p className="text-green-100 mb-3 text-sm">
-                    Start a new Secret Santa event for your family, friends, or coworkers
+                    Crie um amigo secreto com sua família, seus amigos ou colegas de trabalho
                   </p>
                   <span className="text-santa-gold font-semibold group-hover:underline">
-                    Get Started &rarr;
+                    Começar &rarr;
                   </span>
                 </Link>
 
@@ -344,12 +241,12 @@ export default function Home() {
                   className="group bg-gradient-to-br from-santa-red to-santa-red-dark p-8 rounded-2xl card-glow transition-all duration-300 hover:scale-105"
                 >
                   <div className="text-5xl mb-4">🎁</div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Join Existing Group</h2>
+                  <h2 className="text-2xl font-bold text-white mb-2">Recebi um convite</h2>
                   <p className="text-red-100 mb-3 text-sm">
-                    Have an invite code? Join your family&apos;s or office gift exchange group
+                    Use o convite do organizador para solicitar entrada em um novo grupo
                   </p>
                   <span className="text-santa-gold font-semibold group-hover:underline">
-                    Join Now &rarr;
+                    Abrir convite &rarr;
                   </span>
                 </Link>
               </div>
@@ -364,35 +261,35 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="text-center mb-14">
               <h2 id="how-it-works-heading" className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 font-display">
-                How It Works &mdash; <span className="text-santa-gold">Simple as 1, 2, 3!</span>
+                Como funciona &mdash; <span className="text-santa-gold">Em 3 passos simples!</span>
               </h2>
               <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                Organize your online gift exchange in minutes with our free secret santa generator
+                Organize seu amigo secreto online em poucos minutos, de graça
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               <div className="text-center p-8 bg-santa-dark rounded-2xl border border-santa-green/20 card-glow">
                 <div className="w-16 h-16 bg-santa-green/20 rounded-full flex items-center justify-center text-2xl font-bold text-santa-green mx-auto mb-5 border-2 border-santa-green/40">1</div>
-                <h3 className="text-xl font-bold text-santa-green mb-3">Create Your Group</h3>
+                <h3 className="text-xl font-bold text-santa-green mb-3">Crie seu grupo</h3>
                 <p className="text-gray-400">
-                  Set up a new Secret Santa group with a name, year, and admin password. Add participants with names and optional email addresses. Each person gets a unique login code.
+                  Entre na sua conta e crie um grupo com nome e ano. Escolha se também quer participar e copie o link de convite.
                 </p>
               </div>
 
               <div className="text-center p-8 bg-santa-dark rounded-2xl border border-santa-red/20 card-glow">
                 <div className="w-16 h-16 bg-santa-red/20 rounded-full flex items-center justify-center text-2xl font-bold text-santa-red mx-auto mb-5 border-2 border-santa-red/40">2</div>
-                <h3 className="text-xl font-bold text-santa-red mb-3">Share &amp; Create Wishlists</h3>
+                <h3 className="text-xl font-bold text-santa-red mb-3">Convide e aprove os participantes</h3>
                 <p className="text-gray-400">
-                  Share the invite code with your group. Everyone logs in using their code or email magic link to create a wishlist with gift ideas and product links.
+                  Compartilhe o link do grupo. Os convidados criam sua conta com nome completo, e-mail e senha e solicitam aprovação. Depois de aprovados, podem montar suas listas de desejos.
                 </p>
               </div>
 
               <div className="text-center p-8 bg-santa-dark rounded-2xl border border-santa-gold/20 card-glow">
                 <div className="w-16 h-16 bg-santa-gold/20 rounded-full flex items-center justify-center text-2xl font-bold text-santa-gold mx-auto mb-5 border-2 border-santa-gold/40">3</div>
-                <h3 className="text-xl font-bold text-santa-gold mb-3">Generate Assignments</h3>
+                <h3 className="text-xl font-bold text-santa-gold mb-3">Realizar sorteio</h3>
                 <p className="text-gray-400">
-                  One click randomly assigns Secret Santas. Everyone logs in to discover who they&apos;re buying for and view their recipient&apos;s wishlist. It&apos;s that simple!
+                  Faça o sorteio com um clique. Cada participante entra para descobrir quem tirou e conferir a lista de desejos dessa pessoa. Simples assim!
                 </p>
               </div>
             </div>
@@ -404,59 +301,59 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="text-center mb-14">
               <h2 id="features-heading" className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 font-display">
-                Why Choose Our <span className="text-santa-red">Secret Santa</span> App?
+                Por que escolher nosso <span className="text-santa-red">Amigo Secreto</span> online?
               </h2>
               <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                The easiest way to organize a family gift exchange or office Secret Santa
+                Um jeito fácil de organizar o amigo secreto da família ou do trabalho
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
               <div className="p-6 bg-[#151528] rounded-2xl border border-white/5 card-glow">
                 <div className="text-4xl mb-4">🎯</div>
-                <h3 className="text-lg font-bold text-santa-gold mb-2">Smart Random Assignment</h3>
+                <h3 className="text-lg font-bold text-santa-gold mb-2">Sorteio automático</h3>
                 <p className="text-gray-400 text-sm">
-                  Our secret santa generator uses a secure algorithm ensuring everyone gets exactly one recipient with no duplicates or self-assignments. Truly random and fair every time.
+                  O sorteio garante que cada participante tire uma única pessoa, sem repetições e sem tirar a si mesmo. Aleatório e justo para todo o grupo.
                 </p>
               </div>
 
               <div className="p-6 bg-[#151528] rounded-2xl border border-white/5 card-glow">
                 <div className="text-4xl mb-4">📝</div>
-                <h3 className="text-lg font-bold text-santa-gold mb-2">Wishlist Manager</h3>
+                <h3 className="text-lg font-bold text-santa-gold mb-2">Listas de desejos</h3>
                 <p className="text-gray-400 text-sm">
-                  Each participant creates a wishlist with up to 5 items including direct product links. Your Secret Santa sees exactly what you want &mdash; no more guessing games!
+                  Cada participante monta uma lista com até 5 itens e links dos produtos. Quem tirou você vê exatamente o que você gostaria de ganhar!
                 </p>
               </div>
 
               <div className="p-6 bg-[#151528] rounded-2xl border border-white/5 card-glow">
                 <div className="text-4xl mb-4">🔐</div>
-                <h3 className="text-lg font-bold text-santa-gold mb-2">Private &amp; Secure</h3>
+                <h3 className="text-lg font-bold text-santa-gold mb-2">Privacidade e segurança</h3>
                 <p className="text-gray-400 text-sm">
-                  Each group is completely isolated with unique invite codes. Choose between simple login codes or email magic links. Your Secret Santa assignment stays secret.
+                  Cada grupo tem seu próprio link de convite. O administrador avalia as solicitações e apenas participantes aprovados acessam o sorteio e suas listas de desejos.
                 </p>
               </div>
 
               <div className="p-6 bg-[#151528] rounded-2xl border border-white/5 card-glow">
                 <div className="text-4xl mb-4">💰</div>
-                <h3 className="text-lg font-bold text-santa-gold mb-2">Multi-Currency Budgets</h3>
+                <h3 className="text-lg font-bold text-santa-gold mb-2">Presentes em várias moedas</h3>
                 <p className="text-gray-400 text-sm">
-                  Set a gift budget in any currency &mdash; USD, EUR, GBP, ZAR, and more. Everyone knows the spending limit so the gift exchange is fair and comfortable for all.
+                  Defina o valor do presente em reais, dólares, euros e outras moedas. Assim, todo o grupo conhece o limite e pode participar com tranquilidade.
                 </p>
               </div>
 
               <div className="p-6 bg-[#151528] rounded-2xl border border-white/5 card-glow">
                 <div className="text-4xl mb-4">📱</div>
-                <h3 className="text-lg font-bold text-santa-gold mb-2">Works Everywhere</h3>
+                <h3 className="text-lg font-bold text-santa-gold mb-2">Acesse de qualquer lugar</h3>
                 <p className="text-gray-400 text-sm">
-                  Fully responsive design works beautifully on phones, tablets, and desktops. Manage your Secret Santa organizer from anywhere, anytime &mdash; perfect for remote teams.
+                  Use no celular, tablet ou computador. Organize seu amigo secreto onde e quando quiser, inclusive com equipes que trabalham a distância.
                 </p>
               </div>
 
               <div className="p-6 bg-[#151528] rounded-2xl border border-white/5 card-glow">
                 <div className="text-4xl mb-4">✨</div>
-                <h3 className="text-lg font-bold text-santa-gold mb-2">No Registration Required</h3>
+                <h3 className="text-lg font-bold text-santa-gold mb-2">Entrada por convite</h3>
                 <p className="text-gray-400 text-sm">
-                  No sign-ups, no accounts needed. Free for groups up to 10 people. Need more? Unlock unlimited participants for a one-time $10 payment.
+                  Entrada simples pelo link do grupo, com nome completo e aprovação. Grátis para grupos de até 10 pessoas. Para grupos maiores, libere participantes ilimitados com um pagamento único de US$ 10.
                 </p>
               </div>
             </div>
@@ -467,38 +364,38 @@ export default function Home() {
         <section className="py-20 bg-[#151528]" aria-labelledby="pricing-heading">
           <div className="container mx-auto px-4 text-center">
             <h2 id="pricing-heading" className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 font-display">
-              <span className="text-santa-gold">Simple</span> Pricing
+              <span className="text-santa-gold">Planos</span> e preços
             </h2>
             <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-              Free for groups up to 10 people. One simple upgrade for bigger groups.
+              Grátis para grupos de até 10 pessoas. Um pagamento único para grupos maiores.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
               {/* Free Tier */}
               <div className="bg-santa-dark rounded-2xl border-2 border-white/10 p-8 card-glow">
                 <div className="text-4xl mb-3">🎁</div>
-                <div className="text-santa-green text-sm font-semibold uppercase tracking-wider mb-2">Free</div>
-                <div className="text-5xl font-bold text-white mb-2">$0</div>
-                <p className="text-gray-400 mb-6">No credit card needed</p>
+                <div className="text-santa-green text-sm font-semibold uppercase tracking-wider mb-2">Grátis</div>
+                <div className="text-5xl font-bold text-white mb-2">US$ 0</div>
+                <p className="text-gray-400 mb-6">Não precisa de cartão de crédito</p>
 
                 <ul className="text-left space-y-3 mb-8">
                   <li className="flex items-start text-gray-300">
-                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Up to 10 participants per group</span>
+                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Até 10 participantes por grupo</span>
                   </li>
                   <li className="flex items-start text-gray-300">
-                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Unlimited groups</span>
+                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Grupos ilimitados</span>
                   </li>
                   <li className="flex items-start text-gray-300">
-                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Wishlist management (5 items)</span>
+                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Lista de desejos com até 5 itens</span>
                   </li>
                   <li className="flex items-start text-gray-300">
-                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Random assignments</span>
+                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Sorteio automático</span>
                   </li>
                   <li className="flex items-start text-gray-300">
-                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Email magic link login</span>
+                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Convites por link com aprovação</span>
                   </li>
                   <li className="flex items-start text-gray-300">
-                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Multi-currency budgets</span>
+                    <span className="text-santa-green mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Valor do presente em várias moedas</span>
                   </li>
                 </ul>
 
@@ -506,27 +403,27 @@ export default function Home() {
                   href="/create"
                   className="block w-full bg-santa-green text-white py-3 rounded-xl font-bold text-lg hover:bg-santa-green-dark transition-colors"
                 >
-                  Get Started &rarr;
+                  Começar &rarr;
                 </Link>
               </div>
 
               {/* Unlimited Tier */}
               <div className="bg-santa-dark rounded-2xl border-2 border-santa-gold/30 p-8 card-glow relative">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-santa-gold text-santa-dark text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Best Value</div>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-santa-gold text-santa-dark text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Melhor opção</div>
                 <div className="text-4xl mb-3">🏆</div>
-                <div className="text-santa-gold text-sm font-semibold uppercase tracking-wider mb-2">Unlimited</div>
-                <div className="text-5xl font-bold text-white mb-2">$10</div>
-                <p className="text-gray-400 mb-6">One-time payment</p>
+                <div className="text-santa-gold text-sm font-semibold uppercase tracking-wider mb-2">Ilimitado</div>
+                <div className="text-5xl font-bold text-white mb-2">US$ 10</div>
+                <p className="text-gray-400 mb-6">Pagamento único</p>
 
                 <ul className="text-left space-y-3 mb-8">
                   <li className="flex items-start text-gray-300">
-                    <span className="text-santa-gold mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Everything in Free</span>
+                    <span className="text-santa-gold mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Tudo do plano grátis</span>
                   </li>
                   <li className="flex items-start text-gray-300">
-                    <span className="text-santa-gold mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Unlimited participants per group</span>
+                    <span className="text-santa-gold mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Participantes ilimitados por grupo</span>
                   </li>
                   <li className="flex items-start text-gray-300">
-                    <span className="text-santa-gold mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Pay once, use forever</span>
+                    <span className="text-santa-gold mr-3 mt-0.5 flex-shrink-0">&#10003;</span> <span>Pague uma vez e use para sempre</span>
                   </li>
                 </ul>
 
@@ -534,7 +431,7 @@ export default function Home() {
                   href="https://buy.stripe.com/7sY00i9dP2otgDv0RbeAg03"
                   className="block w-full bg-santa-gold text-santa-dark py-3 rounded-xl font-bold text-lg hover:bg-santa-gold-dark transition-colors text-center"
                 >
-                  Buy Now &rarr;
+                  Comprar agora &rarr;
                 </a>
               </div>
             </div>
@@ -546,10 +443,10 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="text-center mb-14">
               <h2 id="faq-heading" className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 font-display">
-                Frequently Asked <span className="text-santa-red">Questions</span>
+                Perguntas <span className="text-santa-red">frequentes</span>
               </h2>
               <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                Everything you need to know about our free Secret Santa generator
+                Tudo o que você precisa saber sobre nosso amigo secreto online grátis
               </p>
             </div>
 
@@ -576,23 +473,23 @@ export default function Home() {
         <section className="py-20 bg-gradient-to-r from-santa-red-dark via-santa-red to-santa-green" aria-labelledby="cta-heading">
           <div className="container mx-auto px-4 text-center">
             <h2 id="cta-heading" className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 text-white font-display">
-              Ready to Create Your Secret Santa Magic?
+              Vamos organizar seu amigo secreto?
             </h2>
             <p className="text-xl mb-10 text-white/80 max-w-2xl mx-auto">
-              Join thousands of families, friends, and offices who use our free secret santa organizer for their holiday gift exchanges
+              Reúna sua família, seus amigos ou colegas de trabalho e organize uma troca de presentes especial
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/create"
                 className="bg-white text-santa-red px-8 py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-santa-snow transition-colors hover:scale-105 transform duration-300 min-h-[48px]"
               >
-                🎄 Create New Group
+                🎄 Criar novo grupo
               </Link>
               <Link
                 href="/join"
                 className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-white hover:text-santa-green transition-all hover:scale-105 transform duration-300 min-h-[48px]"
               >
-                🎁 Join Existing Group
+                🎁 Entrar em um grupo
               </Link>
             </div>
           </div>
@@ -604,38 +501,38 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
               <div>
                 <div className="text-2xl font-bold mb-3">
-                  <span className="text-santa-red">Secret</span>{" "}
-                  <span className="text-santa-green">Santa</span>{" "}
+                  <span className="text-santa-red">Amigo</span>{" "}
+                  <span className="text-santa-green">Secreto</span>{" "}
                   <span className="text-santa-gold">🎅</span>
                 </div>
                 <p className="text-gray-500 text-sm">
-                  The free online Secret Santa generator for organizing magical gift exchanges with your loved ones.
+                  O organizador de amigo secreto online e grátis para trocar presentes com quem você gosta.
                 </p>
               </div>
 
               <div>
-                <h3 className="text-santa-gold font-semibold mb-3">Quick Links</h3>
-                <nav aria-label="Footer navigation">
+                <h3 className="text-santa-gold font-semibold mb-3">Links rápidos</h3>
+                <nav aria-label="Navegação do rodapé">
                   <ul className="space-y-2">
-                    <li><Link href="/create" className="text-gray-400 hover:text-santa-gold transition-colors text-sm">Create Group</Link></li>
-                    <li><Link href="/join" className="text-gray-400 hover:text-santa-gold transition-colors text-sm">Join Group</Link></li>
-                    <li><Link href="/login" className="text-gray-400 hover:text-santa-gold transition-colors text-sm">Participant Login</Link></li>
-                    <li><a href="#pricing-heading" className="text-gray-400 hover:text-santa-gold transition-colors text-sm">Pricing</a></li>
+                    <li><Link href="/create" className="text-gray-400 hover:text-santa-gold transition-colors text-sm">Criar grupo</Link></li>
+                    <li><Link href="/groups" className="text-santa-gold hover:underline">Meus grupos</Link></li><li><Link href="/join" className="text-gray-400 hover:text-santa-gold transition-colors text-sm">Entrar em um grupo</Link></li>
+                    <li><Link href="/join" className="text-gray-400 hover:text-santa-gold transition-colors text-sm">Acesso do participante</Link></li>
+                    <li><a href="#pricing-heading" className="text-gray-400 hover:text-santa-gold transition-colors text-sm">Planos e preços</a></li>
                   </ul>
                 </nav>
               </div>
 
               <div>
-                <h3 className="text-santa-gold font-semibold mb-3">About</h3>
+                <h3 className="text-santa-gold font-semibold mb-3">Sobre</h3>
                 <p className="text-gray-500 text-sm">
-                  Built with love for the holiday season. Our secret santa app makes gift exchange organizing effortless and fun for families, friend groups, and offices worldwide.
+                  Feito com carinho para celebrar bons momentos. Nosso aplicativo torna a organização do amigo secreto simples e divertida para famílias, amigos e equipes de trabalho.
                 </p>
               </div>
             </div>
 
             <div className="border-t border-white/5 pt-6 text-center">
               <p className="text-gray-500 text-sm">
-                &copy; {new Date().getFullYear()} Secret Santa Generator &bull; Free Online Gift Exchange Tool &bull;{" "}
+                &copy; {new Date().getFullYear()} Gerador de Amigo Secreto &bull; Sorteio online grátis &bull;{" "}
                 <a href="https://santa.wagnerway.co.za" className="text-santa-gold hover:text-santa-gold-dark transition-colors">
                   santa.wagnerway.co.za
                 </a>

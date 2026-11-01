@@ -9,22 +9,22 @@ export async function POST(request: NextRequest) {
     const session = await getSession();
 
     if (!session.isLoggedIn || !session.personId) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+      return NextResponse.json({ error: "É necessário entrar para continuar" }, { status: 401 });
     }
 
     const { personId, items } = await request.json();
 
     // Verify the session user matches the personId being modified
     if (personId !== session.personId) {
-      return NextResponse.json({ error: "Forbidden: you can only modify your own wishlist" }, { status: 403 });
+      return NextResponse.json({ error: "Acesso negado: você só pode alterar sua própria lista de desejos" }, { status: 403 });
     }
 
     if (!personId) {
-      return NextResponse.json({ error: "Person ID is required" }, { status: 400 });
+      return NextResponse.json({ error: "O identificador do participante é obrigatório" }, { status: 400 });
     }
 
     if (!items || !Array.isArray(items)) {
-      return NextResponse.json({ error: "Items must be an array" }, { status: 400 });
+      return NextResponse.json({ error: "Os itens devem ser enviados em uma lista" }, { status: 400 });
     }
 
     // Validate wishlist items
@@ -34,12 +34,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify person exists and belongs to the session's group
-    const person = await prisma.person.findUnique({ where: { id: personId } });
+    const person = await prisma.person.findUnique({ where: { id: personId }, include: { group: { select: { wishlistsEnabled: true } } } });
     if (!person) {
-      return NextResponse.json({ error: "Person not found" }, { status: 404 });
+      return NextResponse.json({ error: "Participante não encontrado" }, { status: 404 });
     }
-    if (person.groupId !== session.groupId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (person.groupId !== session.groupId || person.status !== "APPROVED") {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+    }
+
+    if (!person.group.wishlistsEnabled) {
+      return NextResponse.json({ error: "As listas de desejos estão ocultas neste grupo. A escolha do presente é livre." }, { status: 403 });
     }
 
     // Delete existing wishlist items
@@ -64,6 +68,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ wishlistItems });
   } catch (error) {
     console.error("Error updating wishlist:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

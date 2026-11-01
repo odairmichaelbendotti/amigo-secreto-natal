@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const { inviteCode } = await request.json();
 
     if (!inviteCode) {
-      return NextResponse.json({ error: "Invite code is required" }, { status: 400 });
+      return NextResponse.json({ error: "O código de convite é obrigatório" }, { status: 400 });
     }
 
     // Find group by invite code
@@ -21,12 +21,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!group) {
-      return NextResponse.json({ error: "Invalid invite code" }, { status: 404 });
+      return NextResponse.json({ error: "Código de convite inválido" }, { status: 404 });
     }
 
     return NextResponse.json({ group });
   } catch (error) {
     console.error("Error verifying group:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

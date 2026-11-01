@@ -1,4 +1,4 @@
-const CACHE_NAME = "secret-santa-v1";
+const CACHE_NAME = "secret-santa-v3";
 
 const APP_SHELL = [
   "/",
@@ -18,34 +18,28 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+        keys.filter((k) => k.startsWith("secret-santa-") && k !== CACHE_NAME).map((k) => caches.delete(k))
       )
     )
   );
   self.clients.claim();
 });
 
-// Fetch — network-first for API, cache-first for static assets
+// Only cache static assets and full page navigations.
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
-  if (request.method !== "GET") return;
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  // Network-first for API calls and Next.js data routes
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/_next/data/")) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
-    return;
-  }
+  // Next.js data, RSC payloads and HMR must always come from the server.
+  if (
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/_next/data/") ||
+    url.pathname.startsWith("/_next/webpack-hmr") ||
+    request.headers.get("RSC") === "1" ||
+    url.searchParams.has("_rsc")
+  ) return;
 
   // Cache-first for static assets
   if (
@@ -54,27 +48,40 @@ self.addEventListener("fetch", (event) => {
     url.pathname.match(/\.(png|jpg|jpeg|svg|gif|webp|ico|woff2?|ttf|css|js)$/)
   ) {
     event.respondWith(
-      caches.match(request).then(
+      caches.open(CACHE_NAME).then((cache) => cache.match(request).then(
         (cached) =>
           cached ||
           fetch(request).then((response) => {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            // Development chunks reuse URLs; only immutable Next.js assets are safe to cache.
+            if (response.ok && (
+              !url.pathname.startsWith("/_next/") ||
+              response.headers.get("cache-control")?.includes("immutable")
+            )) {
+              event.waitUntil(cache.put(request, response.clone()));
+            }
             return response;
           })
-      )
+      ))
     );
     return;
   }
 
-  // Network-first for navigation / everything else, with offline fallback
+  if (request.mode !== "navigate") return;
+
+  // Network-first for full page navigations, with a fallback for the same page.
   event.respondWith(
     fetch(request)
       .then((response) => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        if (response.ok) {
+          event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone())));
+        }
         return response;
       })
-      .catch(() => caches.match(request).then((cached) => cached || caches.match("/")))
+      .catch(async (error) => {
+        const cache = await caches.open(CACHE_NAME);
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        throw error;
+      })
   );
 });

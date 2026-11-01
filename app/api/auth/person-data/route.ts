@@ -9,12 +9,13 @@ export async function GET() {
     const session = await getSession();
 
     if (!session.isLoggedIn || !session.personId || !session.groupId) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "Você não está autenticado" }, { status: 401 });
     }
 
     const person = await prisma.person.findUnique({
-      where: { id: session.personId },
+      where: { id: session.personId, groupId: session.groupId, status: "APPROVED" },
       include: {
+        group: { select: { wishlistsEnabled: true } },
         wishlistItems: {
           orderBy: { order: "asc" },
         },
@@ -37,15 +38,21 @@ export async function GET() {
     });
 
     if (!person) {
-      return NextResponse.json({ error: "Person not found" }, { status: 404 });
+      return NextResponse.json({ error: "Sua participação precisa ser aprovada pelo administrador" }, { status: 403 });
     }
 
+    const wishlistsEnabled = person.group.wishlistsEnabled;
+    const assignment = person.giverFor[0] || null;
     return NextResponse.json({
-      wishlistItems: person.wishlistItems,
-      assignment: person.giverFor[0] || null,
-    });
+      wishlistsEnabled,
+      wishlistItems: wishlistsEnabled ? person.wishlistItems : [],
+      assignment: assignment ? {
+        ...assignment,
+        receiver: { ...assignment.receiver, wishlistItems: wishlistsEnabled ? assignment.receiver.wishlistItems : [] },
+      } : null,
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Person data error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

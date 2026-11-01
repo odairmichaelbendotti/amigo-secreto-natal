@@ -1,45 +1,10 @@
 import {
-  generateLoginCode,
   generateGroupInviteCode,
   validateWishlistItems,
 } from '@/lib/utils';
 
 const ALLOWED_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const EXCLUDED_CHARS = ['I', 'O', '0', '1'];
-
-describe('generateLoginCode', () => {
-  it('returns an 8-character string', () => {
-    const code = generateLoginCode();
-    expect(code).toHaveLength(8);
-  });
-
-  it('only contains allowed characters', () => {
-    for (let i = 0; i < 50; i++) {
-      const code = generateLoginCode();
-      for (const char of code) {
-        expect(ALLOWED_CHARS).toContain(char);
-      }
-    }
-  });
-
-  it('does not contain excluded characters (I, O, 0, 1, L)', () => {
-    for (let i = 0; i < 50; i++) {
-      const code = generateLoginCode();
-      for (const excluded of EXCLUDED_CHARS) {
-        expect(code).not.toContain(excluded);
-      }
-    }
-  });
-
-  it('multiple calls usually generate different codes', () => {
-    const codes = new Set<string>();
-    for (let i = 0; i < 20; i++) {
-      codes.add(generateLoginCode());
-    }
-    // With 8 chars from 31-char alphabet, collisions in 20 draws are extremely unlikely
-    expect(codes.size).toBeGreaterThan(1);
-  });
-});
 
 describe('generateGroupInviteCode', () => {
   it('returns a 6-character string', () => {
@@ -111,7 +76,7 @@ describe('validateWishlistItems', () => {
     it('returns error for 0 items', () => {
       const result = validateWishlistItems([]);
       expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/at least 1/i);
+      expect(result.error).toMatch(/pelo menos 1/i);
     });
 
     it('returns error for 6 items', () => {
@@ -121,7 +86,7 @@ describe('validateWishlistItems', () => {
       }));
       const result = validateWishlistItems(items);
       expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/maximum.*5/i);
+      expect(result.error).toMatch(/máximo.*5/i);
     });
 
     it('returns error for more than 6 items', () => {
@@ -138,13 +103,13 @@ describe('validateWishlistItems', () => {
     it('returns error for empty title', () => {
       const result = validateWishlistItems([{ title: '', link: 'https://example.com' }]);
       expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/title/i);
+      expect(result.error).toMatch(/título/i);
     });
 
     it('returns error for whitespace-only title', () => {
       const result = validateWishlistItems([{ title: '   ', link: 'https://example.com' }]);
       expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/title/i);
+      expect(result.error).toMatch(/título/i);
     });
   });
 
@@ -164,13 +129,13 @@ describe('validateWishlistItems', () => {
     it('returns error for invalid URL', () => {
       const result = validateWishlistItems([{ title: 'Test', link: 'not-a-url' }]);
       expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/invalid url/i);
+      expect(result.error).toMatch(/URL inválida/i);
     });
 
     it('returns error for partial URL', () => {
       const result = validateWishlistItems([{ title: 'Test', link: 'example.com' }]);
       expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/invalid url/i);
+      expect(result.error).toMatch(/URL inválida/i);
     });
   });
 
@@ -182,7 +147,7 @@ describe('validateWishlistItems', () => {
       ];
       const result = validateWishlistItems(items);
       expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/title/i);
+      expect(result.error).toMatch(/título/i);
     });
 
     it('returns error if any item has invalid URL', () => {
@@ -192,7 +157,7 @@ describe('validateWishlistItems', () => {
       ];
       const result = validateWishlistItems(items);
       expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/invalid url/i);
+      expect(result.error).toMatch(/URL inválida/i);
     });
   });
 });

@@ -3,21 +3,25 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export interface SessionData {
+  userId?: string;
   personId?: string;
   personName?: string;
   groupId?: string;
   groupName?: string;
-  loginMethod?: "code" | "magic-link";
+  loginMethod?: "account" | "request" | "admin";
+  pendingPersonId?: string;
+  pendingGroupId?: string;
   isLoggedIn?: boolean;
   // Admin session fields
   isAdmin?: boolean;
   adminGroupId?: string;
   adminGroupName?: string;
   adminInviteCode?: string;
+  adminPersonId?: string;
 }
 
 const sessionOptions = {
-  password: process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET || "this-is-a-development-only-secret-that-must-be-changed",
+  password: process.env.SESSION_SECRET || "this-is-a-development-only-secret-that-must-be-changed",
   cookieName: "secret-santa-session",
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",

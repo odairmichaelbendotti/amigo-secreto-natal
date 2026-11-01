@@ -8,6 +8,8 @@
  * - Uses a derangement algorithm to ensure valid assignments
  */
 
+import { MIN_DRAW_PARTICIPANTS } from "@/lib/draw-rules";
+
 interface Person {
   id: string;
   name: string;
@@ -44,12 +46,19 @@ function isValidAssignment(givers: Person[], receivers: Person[]): boolean {
 
 /**
  * Generates Secret Santa assignments
- * Minimum 3 people required for valid Secret Santa
+ * Minimum 2 people required for valid Secret Santa
  */
 export function generateSecretSantaAssignments(people: Person[]): Assignment[] | null {
-  // Need at least 3 people for Secret Santa
-  if (people.length < 3) {
+  if (people.length < MIN_DRAW_PARTICIPANTS) {
     return null;
+  }
+
+  // Two participants have exactly one possible exchange.
+  if (people.length === 2) {
+    return [
+      { giverId: people[0].id, receiverId: people[1].id },
+      { giverId: people[1].id, receiverId: people[0].id },
+    ];
   }
 
   const givers = [...people];

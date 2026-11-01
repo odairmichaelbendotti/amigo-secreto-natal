@@ -4,15 +4,11 @@
 function validateEnv() {
   const required: Record<string, string> = {
     DATABASE_URL: "PostgreSQL connection string",
-    MAGIC_LINK_SECRET: "Secret key for signing magic link tokens (min 32 chars recommended)",
+    SESSION_SECRET: "Chave de criptografia das sessões (pelo menos 32 caracteres)",
   };
 
   const recommended: Record<string, string> = {
-    SESSION_SECRET: "Secret key for encrypting session cookies (min 32 chars). Falls back to MAGIC_LINK_SECRET if not set.",
-    EMAIL_HOST: "SMTP server hostname",
-    EMAIL_USER: "SMTP authentication username",
-    EMAIL_PASS: "SMTP authentication password",
-    NEXTAUTH_URL: "Base URL for magic link emails (e.g. https://your-domain.com)",
+    NEXTAUTH_URL: "Endereço público da aplicação para os pagamentos",
   };
 
   const missing: string[] = [];

@@ -8,7 +8,7 @@ function makePeople(count: number) {
 }
 
 describe('generateSecretSantaAssignments', () => {
-  describe('returns null for fewer than 3 people', () => {
+  describe('returns null for fewer than 2 people', () => {
     it('returns null for 0 people', () => {
       expect(generateSecretSantaAssignments([])).toBeNull();
     });
@@ -17,9 +17,13 @@ describe('generateSecretSantaAssignments', () => {
       expect(generateSecretSantaAssignments(makePeople(1))).toBeNull();
     });
 
-    it('returns null for 2 people', () => {
-      expect(generateSecretSantaAssignments(makePeople(2))).toBeNull();
-    });
+  });
+
+  it('makes two participants give to each other without self-assignments', () => {
+    expect(generateSecretSantaAssignments(makePeople(2))).toEqual([
+      { giverId: 'id-0', receiverId: 'id-1' },
+      { giverId: 'id-1', receiverId: 'id-0' },
+    ]);
   });
 
   describe('returns valid assignments for 3 people', () => {

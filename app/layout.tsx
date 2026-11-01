@@ -1,37 +1,38 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { getServiceWorkerScript } from "@/lib/service-worker";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "Secret Santa Generator - Free Online Gift Exchange Organizer",
-    template: "%s | Secret Santa Generator",
+    default: "Gerador de Amigo Secreto - Organize sua troca de presentes grátis",
+    template: "%s | Gerador de Amigo Secreto",
   },
-  description: "Free Secret Santa generator for families, friends & offices. Create gift exchange groups, manage wishlists, and automatically assign Secret Santa partners. No registration required!",
-  keywords: "secret santa generator, free secret santa, online gift exchange, secret santa app, family gift exchange, office secret santa, wishlist manager, secret santa organizer",
-  authors: [{ name: "Secret Santa Generator" }],
-  creator: "Secret Santa Generator",
+  description: "Organize seu amigo secreto com a família, os amigos ou o trabalho. Crie grupos, monte listas de desejos e faça o sorteio automaticamente. Grátis e fácil de organizar!",
+  keywords: "amigo secreto, sorteio de amigo secreto, amigo secreto grátis, amigo secreto online, troca de presentes, amigo secreto em família, amigo secreto no trabalho, lista de desejos",
+  authors: [{ name: "Gerador de Amigo Secreto" }],
+  creator: "Gerador de Amigo Secreto",
   metadataBase: new URL("https://santa.wagnerway.co.za"),
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "pt_BR",
     url: "https://santa.wagnerway.co.za",
-    siteName: "Secret Santa Generator",
-    title: "Secret Santa Generator - Free Online Gift Exchange",
-    description: "Create and manage Secret Santa gift exchanges for your family, friends, or office. Free, easy to use, and no registration required!",
+    siteName: "Gerador de Amigo Secreto",
+    title: "Gerador de Amigo Secreto - Sorteio online grátis",
+    description: "Organize o amigo secreto da família, dos amigos ou do trabalho. Grátis, com convites por link e aprovação de participantes!",
     images: [{
       url: "/og-image.png",
       width: 1200,
       height: 630,
-      alt: "Secret Santa Generator - Free Online Gift Exchange",
+      alt: "Gerador de Amigo Secreto - Sorteio online grátis",
     }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Secret Santa Generator - Free Online Gift Exchange",
-    description: "Create and manage Secret Santa gift exchanges for free!",
+    title: "Gerador de Amigo Secreto - Sorteio online grátis",
+    description: "Crie e organize seu amigo secreto de graça!",
     images: ["/og-image.png"],
   },
   robots: {
@@ -56,27 +57,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="pt-BR" className="dark">
       <head>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎅</text></svg>" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#EF4444" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Secret Santa" />
+        <meta name="apple-mobile-web-app-title" content="Amigo Secreto" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body className={`${inter.className} antialiased`}>
         {children}
         <script
           dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js');
-                });
-              }
-            `,
+            __html: getServiceWorkerScript(process.env.NODE_ENV === "production"),
           }}
         />
       </body>

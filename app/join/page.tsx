@@ -1,144 +1,56 @@
 "use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-
-export default function JoinGroup() {
-  const [inviteCode, setInviteCode] = useState("");
-  const [userType, setUserType] = useState<"admin" | "participant" | null>(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [groupInfo, setGroupInfo] = useState<{ id: string; name: string; year: number } | null>(null);
-  const router = useRouter();
-
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
+import AccountForm from "@/components/AccountForm";
+interface Group { id: string; name: string; year: number; inviteCode: string }
+function JoinContent() {
+  const params = useSearchParams(); const router = useRouter();
+  const invitation = params.get("code") || "";
+  const [code, setCode] = useState(invitation);
+  const [group, setGroup] = useState<Group | null>(null);
+  const [user, setUser] = useState<{ name: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  const load = useCallback(async (value: string) => {
+    setLoading(true); setError("");
     try {
-      const res = await fetch("/api/groups/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inviteCode: inviteCode.trim().toUpperCase() }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Invalid invite code");
-        setLoading(false);
-        return;
-      }
-
-      setGroupInfo(data.group);
-      setLoading(false);
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-      setLoading(false);
-    }
-  };
-
-  const handleProceed = (type: "admin" | "participant") => {
-    if (!groupInfo) return;
-
-    // Store group info in session storage
-    sessionStorage.setItem("groupId", groupInfo.id);
-    sessionStorage.setItem("groupName", groupInfo.name);
-    sessionStorage.setItem("inviteCode", inviteCode.toUpperCase());
-
-    if (type === "admin") {
-      router.push("/admin");
-    } else {
-      router.push("/login");
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-santa-dark p-4">
-      <div className="bg-[#151528] p-8 rounded-2xl border border-white/10 card-glow w-full max-w-md">
-        <div className="text-center mb-6">
-          <div className="text-4xl mb-3">🎁</div>
-          <h1 className="text-3xl font-bold text-santa-red mb-2 font-display">
-            Join a Secret Santa Group
-          </h1>
-          <p className="text-gray-400 text-sm">
-            Enter the invite code you received
-          </p>
-        </div>
-
-        {!groupInfo ? (
-          <form onSubmit={handleVerifyCode} className="space-y-4">
-            <div>
-              <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-300 mb-2">
-                Group Invite Code
-              </label>
-              <input
-                type="text"
-                id="inviteCode"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3 bg-santa-dark border border-white/10 rounded-lg focus:ring-2 focus:ring-santa-gold focus:border-transparent text-center font-mono text-2xl tracking-wider text-santa-snow"
-                placeholder="XXXXXX"
-                maxLength={6}
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                6-character code provided by the group admin
-              </p>
-            </div>
-
-            {error && (
-              <div className="bg-santa-red/10 border border-santa-red/30 text-santa-red px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading || inviteCode.length !== 6}
-              className="w-full bg-santa-red text-white py-3 rounded-xl font-semibold hover:bg-santa-red-dark transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transform"
-            >
-              {loading ? "Verifying..." : "Continue"}
-            </button>
-          </form>
-        ) : (
-          <div className="space-y-6">
-            <div className="bg-santa-green/10 border border-santa-green/30 p-4 rounded-lg">
-              <h2 className="font-semibold text-santa-green mb-1">Group Found!</h2>
-              <p className="text-santa-snow">{groupInfo.name}</p>
-              <p className="text-sm text-gray-400">Year: {groupInfo.year}</p>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm text-gray-300 text-center font-medium">
-                How would you like to continue?
-              </p>
-
-              <button
-                onClick={() => handleProceed("admin")}
-                className="w-full bg-santa-red text-white py-3 rounded-xl font-semibold hover:bg-santa-red-dark transition-all duration-300 hover:scale-105 transform"
-              >
-                Admin Portal
-              </button>
-
-              <button
-                onClick={() => handleProceed("participant")}
-                className="w-full bg-santa-green text-white py-3 rounded-xl font-semibold hover:bg-santa-green-dark transition-all duration-300 hover:scale-105 transform"
-              >
-                Participant Login
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-gray-400 hover:text-santa-gold transition-colors">
-            &larr; Back to Home
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+      const [response, sessionResponse] = await Promise.all([
+        fetch("/api/groups/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inviteCode: value }) }),
+        fetch("/api/auth/session", { cache: "no-store" }),
+      ]);
+      const data = await response.json(); const session = await sessionResponse.json();
+      setUser(session.user || null);
+      if (!response.ok) { setError(data.error || "Convite inválido"); return; }
+      setGroup(data.group);
+    } catch { setError("Não foi possível abrir o convite. Tente novamente."); }
+    finally { setLoading(false); }
+  }, []);
+  useEffect(() => { if (invitation) void load(invitation); else setLoading(false); }, [invitation, load]);
+  async function request() {
+    if (!group) return; setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/join/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inviteCode: group.inviteCode }) });
+      const data = await response.json();
+      if (!response.ok) { setError(data.error); return; }
+      router.replace("/groups");
+    } catch { setError("Não foi possível solicitar sua participação."); } finally { setBusy(false); }
+  }
+  return <main className="min-h-screen flex items-center justify-center bg-santa-dark p-4"><div className="bg-[#151528] p-8 rounded-2xl border border-white/10 card-glow w-full max-w-md">
+    <h1 className="text-3xl font-bold text-santa-gold mb-2">{group?.name || "Entrar em um grupo"}</h1>
+    {group && <p className="text-gray-400 mb-6">Amigo secreto {group.year}</p>}
+    {error && <p role="alert" className="text-santa-red mb-4">{error}</p>}
+    {loading ? <p className="text-gray-300">Carregando convite...</p> : !group ? <form onSubmit={e => { e.preventDefault(); void load(code); }} className="space-y-4">
+      <p className="text-gray-400">Abra o link do organizador ou informe o código do grupo.</p>
+      <label htmlFor="inviteCode" className="block text-gray-300">Código do grupo</label>
+      <input id="inviteCode" value={code} onChange={e => setCode(e.target.value.toUpperCase())} maxLength={6} required className="w-full bg-santa-dark text-santa-snow border border-white/10 p-3 rounded-lg" />
+      <button className="w-full bg-santa-green text-white p-3 rounded-xl">Abrir grupo</button>
+    </form> : user ? <div className="space-y-5">
+      <p className="text-gray-300">Olá, {user.name}. Solicite sua entrada e acompanhe a aprovação em Meus grupos.</p>
+      <button onClick={request} disabled={busy} className="w-full bg-santa-green text-white py-3 rounded-xl font-semibold disabled:opacity-50">{busy ? "Solicitando..." : "Solicitar participação"}</button>
+      <Link href="/groups" className="block text-center text-santa-gold">Meus grupos</Link>
+    </div> : <><p className="text-gray-400 text-sm mb-6">Para participar deste amigo secreto, faça login ou crie sua conta. Depois da aprovação, clique em Entrar no grupo na tela Meus grupos.</p><AccountForm inviteCode={group.inviteCode} /></>}
+    <Link href="/" className="block text-center text-gray-400 text-sm mt-6">← Voltar ao início</Link>
+  </div></main>;
 }
+export default function JoinGroup() { return <Suspense fallback={<p>Carregando convite...</p>}><JoinContent /></Suspense>; }

@@ -29,12 +29,12 @@ export async function checkGroupLimits(groupId: string) {
 
 export async function enforceParticipantLimit(groupId: string): Promise<{ allowed: boolean; message?: string }> {
   const info = await checkGroupLimits(groupId);
-  if (!info) return { allowed: false, message: 'Group not found' };
+  if (!info) return { allowed: false, message: "Grupo não encontrado" };
 
   if (!info.canAddParticipant) {
     return {
       allowed: false,
-      message: `Your ${info.limits.name} plan allows up to ${info.limits.maxParticipants} participants. Upgrade to add more.`,
+      message: `Seu plano ${info.limits.name} permite até ${info.limits.maxParticipants} participantes. Mude de plano para adicionar mais.`,
     };
   }
 
@@ -43,12 +43,12 @@ export async function enforceParticipantLimit(groupId: string): Promise<{ allowe
 
 export async function enforceWishlistLimit(groupId: string, itemCount: number): Promise<{ allowed: boolean; message?: string }> {
   const info = await checkGroupLimits(groupId);
-  if (!info) return { allowed: false, message: 'Group not found' };
+  if (!info) return { allowed: false, message: "Grupo não encontrado" };
 
   if (itemCount > info.maxWishlistItems) {
     return {
       allowed: false,
-      message: `Your ${info.limits.name} plan allows up to ${info.maxWishlistItems} wishlist items. Upgrade for more.`,
+      message: `Seu plano ${info.limits.name} permite até ${info.maxWishlistItems} itens na lista de desejos. Mude de plano para adicionar mais.`,
     };
   }
 

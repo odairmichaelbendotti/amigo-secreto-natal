@@ -3,7 +3,7 @@ import { getIronSession } from "iron-session";
 import { SessionData } from "@/lib/session";
 
 const sessionOptions = {
-  password: process.env.SESSION_SECRET || process.env.MAGIC_LINK_SECRET || "this-is-a-development-only-secret-that-must-be-changed",
+  password: process.env.SESSION_SECRET || "this-is-a-development-only-secret-that-must-be-changed",
   cookieName: "secret-santa-session",
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",
@@ -37,6 +37,7 @@ export async function middleware(request: NextRequest) {
   // Skip auth for public routes and auth endpoints
   if (
     pathname.startsWith("/api/auth/") ||
+    pathname.startsWith("/api/join/") ||
     pathname.startsWith("/api/groups/create") ||
     pathname.startsWith("/api/groups/verify") ||
     pathname.startsWith("/api/admin/auth") ||
@@ -53,7 +54,7 @@ export async function middleware(request: NextRequest) {
   for (const route of participantApiRoutes) {
     if (pathname.startsWith(route)) {
       if (!session.isLoggedIn) {
-        return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+        return NextResponse.json({ error: "É necessário entrar para continuar" }, { status: 401 });
       }
       return response;
     }
@@ -68,7 +69,7 @@ export async function middleware(request: NextRequest) {
       }
       // Write operations require admin
       if (!session.isAdmin) {
-        return NextResponse.json({ error: "Admin authentication required" }, { status: 403 });
+        return NextResponse.json({ error: "É necessário entrar como administrador" }, { status: 403 });
       }
       return response;
     }
@@ -78,7 +79,7 @@ export async function middleware(request: NextRequest) {
   for (const route of adminWriteRoutes) {
     if (pathname.startsWith(route) && method === "PATCH") {
       if (!session.isAdmin) {
-        return NextResponse.json({ error: "Admin authentication required" }, { status: 403 });
+        return NextResponse.json({ error: "É necessário entrar como administrador" }, { status: 403 });
       }
       return response;
     }
@@ -87,7 +88,7 @@ export async function middleware(request: NextRequest) {
   // DELETE on /api/people/[id] requires admin
   if (pathname.match(/^\/api\/people\//) && method === "DELETE") {
     if (!session.isAdmin) {
-      return NextResponse.json({ error: "Admin authentication required" }, { status: 403 });
+      return NextResponse.json({ error: "É necessário entrar como administrador" }, { status: 403 });
     }
     return response;
   }

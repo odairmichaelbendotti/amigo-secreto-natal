@@ -1,84 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { authRateLimit } from "@/lib/rate-limit";
+import { normalizeEmail, clearGroupSession, linkLegacySession, requestMembership, AccountError, accountErrorResponse } from "@/lib/accounts";
 
 export async function POST(request: NextRequest) {
   try {
-    const rateLimitResult = authRateLimit(request);
-    if (!rateLimitResult.success) return rateLimitResult.response!;
-
-    const { loginCode, groupId } = await request.json();
-
-    if (!loginCode) {
-      return NextResponse.json({ error: "Login code is required" }, { status: 400 });
-    }
-
-    if (!groupId) {
-      return NextResponse.json({ error: "Group ID is required" }, { status: 400 });
-    }
-
-    // Find person by login code in this group
-    const person = await prisma.person.findFirst({
-      where: {
-        loginCode: loginCode.toUpperCase(),
-        groupId,
-      },
-      include: {
-        group: {
-          select: {
-            id: true,
-            name: true,
-            year: true,
-          },
-        },
-        wishlistItems: {
-          orderBy: { order: "asc" },
-        },
-        giverFor: {
-          include: {
-            receiver: {
-              include: {
-                wishlistItems: {
-                  orderBy: { order: "asc" },
-                },
-              },
-            },
-          },
-          where: {
-            groupId,
-            year: new Date().getFullYear(),
-          },
-        },
-      },
-    });
-
-    if (!person) {
-      return NextResponse.json({ error: "Invalid login code for this group" }, { status: 401 });
-    }
-
-    // Set server-side session
+    const limit = authRateLimit(request);
+    if (!limit.success) return limit.response!;
+    const body = await request.json();
+    const email = normalizeEmail(body.email);
+    const user = email ? await prisma.user.findUnique({ where: { email } }) : null;
+    if (!user || typeof body.password !== "string" || Buffer.byteLength(body.password, "utf8") > 72 || !(await bcrypt.compare(body.password, user.passwordHash))) throw new AccountError("E-mail ou senha inválidos", 401);
     const session = await getSession();
-    session.personId = person.id;
-    session.personName = person.name;
-    session.groupId = person.group.id;
-    session.groupName = person.group.name;
-    session.loginMethod = "code";
-    session.isLoggedIn = true;
+    await prisma.$transaction(async (tx) => {
+      await linkLegacySession(tx, session, user.id);
+      if (body.inviteCode) await requestMembership(tx, user, body.inviteCode);
+    }, { isolationLevel: "Serializable" });
+    clearGroupSession(session);
+    session.userId = user.id;
     await session.save();
-
-    return NextResponse.json({
-      person: {
-        id: person.id,
-        name: person.name,
-        loginCode: person.loginCode,
-        group: person.group,
-        wishlistItems: person.wishlistItems,
-        assignment: person.giverFor[0] || null,
-      },
-    });
+    return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email } });
   } catch (error) {
-    console.error("User login error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const result = accountErrorResponse(error);
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 }

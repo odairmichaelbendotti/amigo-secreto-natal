@@ -1,65 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/session";
 import { generateGroupInviteCode } from "@/lib/utils";
-import { validatePassword } from "@/lib/password";
-import bcrypt from "bcryptjs";
-
+import { clearGroupSession, accountErrorResponse, AccountError } from "@/lib/accounts";
 export async function POST(request: NextRequest) {
   try {
-    const { groupName, adminPassword, year } = await request.json();
-
-    if (!groupName || groupName.trim().length === 0) {
-      return NextResponse.json({ error: "Group name is required" }, { status: 400 });
-    }
-
-    const passwordValidation = validatePassword(adminPassword);
-    if (!passwordValidation.valid) {
-      return NextResponse.json(
-        { error: passwordValidation.error },
-        { status: 400 }
-      );
-    }
-
-    // Generate unique invite code
+    const session = await getSession();
+    const user = session.userId ? await prisma.user.findUnique({ where: { id: session.userId } }) : null;
+    if (!user) throw new AccountError("Entre ou crie sua conta para criar um grupo", 401);
+    const { groupName, year, adminParticipates = true } = await request.json();
+    if (typeof groupName !== "string" || !groupName.trim() || groupName.trim().length > 120) throw new AccountError("Informe um nome de grupo com até 120 caracteres");
+    if (typeof adminParticipates !== "boolean") throw new AccountError("Informe se deseja participar do sorteio");
+    if (!Number.isInteger(year) || year < 2024 || year > 2100) throw new AccountError("Informe um ano válido");
     let inviteCode = generateGroupInviteCode();
-    let exists = await prisma.group.findUnique({ where: { inviteCode } });
-
-    // Regenerate if code already exists (very unlikely)
-    while (exists) {
-      inviteCode = generateGroupInviteCode();
-      exists = await prisma.group.findUnique({ where: { inviteCode } });
-    }
-
-    // Hash admin password
-    const hashedPassword = await bcrypt.hash(adminPassword, 12);
-
-    // Create group with admin config
-    const group = await prisma.group.create({
-      data: {
-        name: groupName.trim(),
-        inviteCode,
-        year: year || new Date().getFullYear(),
-        adminConfig: {
-          create: {
-            hashedPassword,
-          },
-        },
-      },
-      include: {
-        adminConfig: true,
-      },
+    while (await prisma.group.findUnique({ where: { inviteCode } })) inviteCode = generateGroupInviteCode();
+    const group = await prisma.$transaction(async (tx) => {
+      const created = await tx.group.create({ data: { name: groupName.trim(), inviteCode, year, people: adminParticipates ? { create: { name: user.name, userId: user.id } } : undefined }, include: { people: true } });
+      await tx.adminConfig.create({ data: { groupId: created.id, userId: user.id, personId: created.people[0]?.id, hashedPassword: user.passwordHash } });
+      return created;
     });
-
-    return NextResponse.json({
-      group: {
-        id: group.id,
-        name: group.name,
-        inviteCode: group.inviteCode,
-        year: group.year,
-      },
-    }, { status: 201 });
+    clearGroupSession(session);
+    session.isAdmin = true; session.adminGroupId = group.id; session.adminGroupName = group.name;
+    session.adminInviteCode = group.inviteCode; session.adminPersonId = group.people[0]?.id;
+    if (group.people[0]) {
+      session.personId = group.people[0].id; session.personName = user.name;
+      session.groupId = group.id; session.groupName = group.name;
+      session.isLoggedIn = true; session.loginMethod = "admin";
+    }
+    await session.save();
+    return NextResponse.json({ group: { id: group.id, name: group.name, inviteCode: group.inviteCode, year: group.year } }, { status: 201 });
   } catch (error) {
-    console.error("Error creating group:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const result = accountErrorResponse(error);
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 }

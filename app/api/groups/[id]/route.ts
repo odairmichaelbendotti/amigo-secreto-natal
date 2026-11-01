@@ -15,9 +15,13 @@ export async function GET(
     // Verify user has access to this group
     const userGroupId = session.isAdmin ? session.adminGroupId : session.groupId;
     if (userGroupId !== groupId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
+    if (!session.isAdmin) {
+      const participant = session.isLoggedIn && session.personId ? await prisma.person.findFirst({ where: { id: session.personId, groupId, status: "APPROVED" }, select: { id: true } }) : null;
+      if (!participant) return NextResponse.json({ error: "Sua participação precisa ser aprovada" }, { status: 403 });
+    }
     const group = await prisma.group.findUnique({
       where: { id: groupId },
       include: {
@@ -31,13 +35,13 @@ export async function GET(
     });
 
     if (!group) {
-      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+      return NextResponse.json({ error: "Grupo não encontrado" }, { status: 404 });
     }
 
     return NextResponse.json({ group });
   } catch (error) {
     console.error("Error fetching group:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 
@@ -51,10 +55,14 @@ export async function PATCH(
 
     // Only admins can modify groups
     if (!session.isAdmin || session.adminGroupId !== groupId) {
-      return NextResponse.json({ error: "Admin authentication required" }, { status: 403 });
+      return NextResponse.json({ error: "É necessário entrar como administrador" }, { status: 403 });
     }
 
-    const { budgetAmount, budgetCurrency } = await request.json();
+    const { budgetAmount, budgetCurrency, wishlistsEnabled } = await request.json();
+
+    if (wishlistsEnabled !== undefined && typeof wishlistsEnabled !== "boolean") {
+      return NextResponse.json({ error: "Informe se as listas de desejos devem ser exibidas" }, { status: 400 });
+    }
 
     // Validate currency if provided
     const validCurrencies = [
@@ -63,16 +71,16 @@ export async function PATCH(
       'KRW', 'SGD'
     ];
 
-    if (budgetCurrency && !validCurrencies.includes(budgetCurrency)) {
+    if (budgetCurrency !== undefined && !validCurrencies.includes(budgetCurrency)) {
       return NextResponse.json(
-        { error: "Invalid currency code" },
+        { error: "Código de moeda inválido" },
         { status: 400 }
       );
     }
 
-    if (budgetAmount !== undefined && budgetAmount !== null && (isNaN(budgetAmount) || budgetAmount < 0)) {
+    if (budgetAmount !== undefined && budgetAmount !== null && (typeof budgetAmount !== "number" || !Number.isFinite(budgetAmount) || budgetAmount < 0)) {
       return NextResponse.json(
-        { error: "Budget amount must be a positive number" },
+        { error: "O valor do presente deve ser um número positivo" },
         { status: 400 }
       );
     }
@@ -80,8 +88,9 @@ export async function PATCH(
     const group = await prisma.group.update({
       where: { id: groupId },
       data: {
-        budgetAmount: budgetAmount,
-        budgetCurrency: budgetCurrency || "USD",
+        ...(budgetAmount !== undefined ? { budgetAmount } : {}),
+        ...(budgetCurrency !== undefined ? { budgetCurrency } : {}),
+        ...(wishlistsEnabled !== undefined ? { wishlistsEnabled } : {}),
         updatedAt: new Date(),
       },
     });
@@ -89,6 +98,6 @@ export async function PATCH(
     return NextResponse.json({ group });
   } catch (error) {
     console.error("Error updating group:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

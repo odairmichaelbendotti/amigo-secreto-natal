@@ -1,18 +1,5 @@
 import { randomBytes } from "crypto";
 
-// Generate a unique login code (8 characters, alphanumeric)
-export function generateLoginCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Exclude similar looking chars
-  let code = "";
-  const bytes = randomBytes(8);
-
-  for (let i = 0; i < 8; i++) {
-    code += chars[bytes[i] % chars.length];
-  }
-
-  return code;
-}
-
 // Generate a unique group invite code (6 characters, alphanumeric)
 export function generateGroupInviteCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Exclude similar looking chars
@@ -29,27 +16,27 @@ export function generateGroupInviteCode(): string {
 // Validate wishlist items (1-5 items with valid URLs)
 export function validateWishlistItems(items: Array<{ title: string; link: string }>): { valid: boolean; error?: string } {
   if (items.length < 1) {
-    return { valid: false, error: "You must have at least 1 wishlist item" };
+    return { valid: false, error: "Sua lista de desejos deve ter pelo menos 1 item" };
   }
 
   if (items.length > 5) {
-    return { valid: false, error: "You can have a maximum of 5 wishlist items" };
+    return { valid: false, error: "Sua lista de desejos pode ter no máximo 5 itens" };
   }
 
   for (const item of items) {
     if (!item.title || item.title.trim().length === 0) {
-      return { valid: false, error: "All items must have a title" };
+      return { valid: false, error: "Todos os itens devem ter um título" };
     }
 
     if (!item.link || item.link.trim().length === 0) {
-      return { valid: false, error: "All items must have a link" };
+      return { valid: false, error: "Todos os itens devem ter um link" };
     }
 
     // Basic URL validation
     try {
       new URL(item.link);
     } catch {
-      return { valid: false, error: `Invalid URL: ${item.link}` };
+      return { valid: false, error: `URL inválida: ${item.link}` };
     }
   }
 

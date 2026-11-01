@@ -11,20 +11,20 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // A group represents a Secret Santa event (e.g., "Smith Family 2024")
 model Group {
-  id             String   @id @default(cuid())
-  name           String   // "Smith Family Secret Santa 2024"
-  inviteCode     String   @unique  // Unique code for people to join this group
-  year           Int      @default(2024)
-  plan           String   @default("free") // free, plus, pro
-  budgetAmount   Float?   // Optional budget amount
-  budgetCurrency String   @default("USD") // Currency code
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id               String   @id @default(cuid())
+  name             String // "Smith Family Secret Santa 2024"
+  inviteCode       String   @unique // Unique code for people to join this group
+  year             Int      @default(2024)
+  plan             String   @default("free") // free, plus, pro
+  budgetAmount     Float? // Optional budget amount
+  budgetCurrency   String   @default("USD") // Currency code
+  wishlistsEnabled Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   // Relations
   people       Person[]
@@ -33,24 +33,41 @@ model Group {
   subscription Subscription?
 }
 
+enum ParticipationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  people       Person[]
+  adminConfigs AdminConfig[]
+}
+
 model Person {
-  id        String   @id @default(cuid())
-  groupId   String   // Links this person to their group
+  id        String              @id @default(cuid())
+  groupId   String // Links this person to their group
   name      String
-  email     String?  // Optional email for magic link login
-  loginCode String   // Unique within this person's context
-  createdAt DateTime @default(now())
+  status    ParticipationStatus @default(APPROVED)
+  userId    String?
+  createdAt DateTime            @default(now())
 
-  group         Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  group         Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
   wishlistItems WishlistItem[]
-  giverFor      Assignment[]     @relation("Giver")
-  receiverFor   Assignment[]     @relation("Receiver")
+  giverFor      Assignment[]   @relation("Giver")
+  receiverFor   Assignment[]   @relation("Receiver")
+  adminFor      AdminConfig?
 
-  @@unique([groupId, loginCode])  // Login code must be unique within a group
-  @@unique([groupId, email])      // Email must be unique within a group (if provided)
+  @@unique([groupId, userId])
   @@index([groupId])
-  @@index([loginCode])
-  @@index([email])
+  @@index([groupId, status])
+  @@index([userId])
 }
 
 model WishlistItem {
@@ -67,7 +84,7 @@ model WishlistItem {
 
 model Assignment {
   id         String   @id @default(cuid())
-  groupId    String   // Assignments are isolated per group
+  groupId    String // Assignments are isolated per group
   giverId    String
   receiverId String
   year       Int
@@ -85,24 +102,30 @@ model Assignment {
 
 model AdminConfig {
   id             String   @id @default(cuid())
-  groupId        String   @unique  // Each group has its own admin
+  groupId        String   @unique // Each group has its own admin
+  personId       String?  @unique
+  userId         String?
   hashedPassword String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group  Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  person Person? @relation(fields: [personId], references: [id], onDelete: NoAction)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
 }
 
 model Subscription {
-  id                     String    @id @default(cuid())
-  groupId                String    @unique
-  stripeCustomerId       String?
-  stripeSubscriptionId   String?   @unique
-  plan                   String    @default("free") // free, plus, pro
-  status                 String    @default("active") // active, canceled, past_due, unpaid
-  currentPeriodEnd       DateTime?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  id                   String    @id @default(cuid())
+  groupId              String    @unique
+  stripeCustomerId     String?
+  stripeSubscriptionId String?   @unique
+  plan                 String    @default("free") // free, plus, pro
+  status               String    @default("active") // active, canceled, past_due, unpaid
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 

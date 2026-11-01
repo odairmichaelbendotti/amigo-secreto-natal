@@ -13,18 +13,13 @@ export default function AdminLogin() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if we have group info from previous steps (sessionStorage used only for join flow)
-    const storedGroupId = sessionStorage.getItem("groupId");
-    const storedGroupName = sessionStorage.getItem("groupName");
-
-    if (!storedGroupId) {
-      // No group selected, redirect to home
-      router.push("/");
-      return;
-    }
-
-    setGroupId(storedGroupId);
-    setGroupName(storedGroupName || "Your Group");
+    void fetch("/api/auth/session", { cache: "no-store" }).then(r => r.json()).then(session => {
+      if (session.isAdmin) { router.replace("/admin/dashboard"); return; }
+      if (session.user) { router.replace("/groups"); return; }
+      const id = sessionStorage.getItem("groupId");
+      if (id) { setGroupId(id); setGroupName(sessionStorage.getItem("groupName") || "Seu grupo"); }
+      else router.replace("/login");
+    }).catch(() => setError("Não foi possível verificar sua conta"));
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +28,7 @@ export default function AdminLogin() {
     setLoading(true);
 
     if (!groupId) {
-      setError("No group selected. Please start over.");
+      setError("Nenhum grupo selecionado. Volte ao início e selecione um grupo.");
       setLoading(false);
       return;
     }
@@ -48,7 +43,7 @@ export default function AdminLogin() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Authentication failed");
+        setError(data.error || "Não foi possível autenticar seu acesso");
         setLoading(false);
         return;
       }
@@ -60,7 +55,7 @@ export default function AdminLogin() {
       sessionStorage.removeItem("adminAuth");
       router.push("/admin/dashboard");
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError("Ocorreu um erro. Tente novamente.");
       setLoading(false);
     }
   };
@@ -70,7 +65,7 @@ export default function AdminLogin() {
       <div className="bg-[#151528] p-8 rounded-2xl border border-white/10 card-glow w-full max-w-md">
         <div className="text-center mb-6">
           <div className="text-4xl mb-3">🎅</div>
-          <h1 className="text-3xl font-bold text-santa-red mb-2 font-display">Admin Portal</h1>
+          <h1 className="text-3xl font-bold text-santa-red mb-2 font-display">Área do administrador</h1>
           {groupName && (
             <p className="text-gray-400">{groupName}</p>
           )}
@@ -79,7 +74,7 @@ export default function AdminLogin() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Admin Password
+              Senha do administrador
             </label>
             <input
               type="password"
@@ -87,7 +82,7 @@ export default function AdminLogin() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 bg-santa-dark border border-white/10 rounded-lg focus:ring-2 focus:ring-santa-gold focus:border-transparent text-santa-snow placeholder-gray-500"
-              placeholder="Enter admin password"
+              placeholder="Digite a senha do administrador"
               required
             />
           </div>
@@ -103,13 +98,13 @@ export default function AdminLogin() {
             disabled={loading}
             className="w-full bg-santa-red text-white py-3 rounded-xl font-semibold hover:bg-santa-red-dark transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transform"
           >
-            {loading ? "Authenticating..." : "Login"}
+            {loading ? "Autenticando..." : "Entrar"}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <Link href="/" className="text-sm text-gray-400 hover:text-santa-gold transition-colors">
-            &larr; Back to Home
+            &larr; Voltar ao início
           </Link>
         </div>
       </div>

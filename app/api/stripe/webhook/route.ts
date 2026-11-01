@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get('stripe-signature');
 
   if (!signature) {
-    return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
+    return NextResponse.json({ error: "Assinatura ausente" }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    return NextResponse.json({ error: "Assinatura inválida" }, { status: 400 });
   }
 
   switch (event.type) {

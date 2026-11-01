@@ -4,31 +4,10 @@ export interface PasswordValidation {
 }
 
 export function validatePassword(password: string): PasswordValidation {
-  if (!password || password.length < 12) {
+  if (typeof password !== "string" || password.length < 4) {
     return {
       valid: false,
-      error: "Password must be at least 12 characters long",
-    };
-  }
-
-  if (!/[a-z]/.test(password)) {
-    return {
-      valid: false,
-      error: "Password must contain at least one lowercase letter",
-    };
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    return {
-      valid: false,
-      error: "Password must contain at least one uppercase letter",
-    };
-  }
-
-  if (!/[0-9]/.test(password)) {
-    return {
-      valid: false,
-      error: "Password must contain at least one number",
+      error: "A senha deve ter pelo menos 4 caracteres",
     };
   }
 

@@ -1,14 +1,14 @@
 # Secret Santa - Multi-Tenant Gift Exchange Platform
 
-A free, self-hosted web application for managing Secret Santa gift exchanges. Perfect for families, friend groups, and communities worldwide. Features multi-tenancy, unique login codes, wishlist management, and automated Secret Santa partner assignments.
+A free, self-hosted web application for managing Secret Santa gift exchanges. Perfect for families, friend groups, and communities worldwide. Features multi-tenancy, email and password accounts, wishlist management, and automated Secret Santa partner assignments.
 
 ## Features
 
 - **Multi-Tenant**: Unlimited groups can use the same installation
 - **Group Creation**: Anyone can create a new Secret Santa group
-- **Invite Codes**: Share a 6-character code to invite people to your group
-- **Admin Portal**: Manage participants, generate login codes, and create Secret Santa assignments
-- **User Login**: Simple code-based authentication (no user accounts needed)
+- **Group invitations**: Share a link; guests register with full name, email and password and request approval
+- **Admin Portal**: Approve or reject participation requests and generate assignments
+- **User Login**: Email/password accounts with groups linked after approval
 - **Wishlist Management**: Each person can add 1-5 gift items with links
 - **Secret Santa Assignments**: Automated partner generation ensuring valid assignments
 - **Mobile Responsive**: Works great on phones, tablets, and desktops
@@ -19,7 +19,7 @@ A free, self-hosted web application for managing Secret Santa gift exchanges. Pe
 - **Framework**: Next.js 14 (App Router) with TypeScript
 - **Database**: PostgreSQL with Prisma ORM
 - **Styling**: Tailwind CSS
-- **Authentication**: Code-based (no user accounts)
+- **Authentication**: Email/password with encrypted session cookies
 - **Deployment**: Docker & Docker Compose
 
 ## Getting Started
@@ -27,7 +27,7 @@ A free, self-hosted web application for managing Secret Santa gift exchanges. Pe
 ### Prerequisites
 
 **For Development:**
-- Node.js 18+ installed
+- Node.js 20.19+, 22.12+, or 24+ installed (required by Prisma 7)
 - PostgreSQL database OR Docker
 
 **For Production (Easiest):**
@@ -57,6 +57,7 @@ That's it! See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment.
    Update `.env`:
    ```
    DATABASE_URL="postgresql://username:password@localhost:5432/secret_santa?schema=public"
+   SESSION_SECRET="replace-with-a-random-secret-of-at-least-32-characters"
    ```
 
 3. **Run database migrations**
@@ -80,23 +81,24 @@ That's it! See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment.
 
 ### For Admins
 
-1. Go to `/admin` and login with your admin password
-2. Add family members to the system (each gets a unique login code)
-3. Share the login codes with each person
+1. Create an account at `/create`, create your group and open its dashboard from `/groups`
+2. Copy the group invitation link and share it with guests
+3. Approve or reject the requests received in the dashboard
 4. Once everyone has added their wishlist, click "Generate Assignments" to create Secret Santa pairs
 5. View all assignments to verify everything worked
 
 ### For Participants
 
-1. Go to `/login` and enter your unique login code
-2. Add 3-5 items to your wishlist with links
-3. Save your wishlist
-4. View your Secret Santa assignment to see who you're buying for
-5. Check their wishlist for gift ideas
+1. Open the group invitation link.
+2. Create an account with full name, email and a password of at least 4 characters (or sign in).
+3. The request appears in `/groups` while the administrator reviews it.
+4. Once approved, open the group from `/groups`, create your wishlist and view your assignment after the draw.
+5. On another device, sign in at `/login` with the same email and password; your groups are restored.
 
 ## Database Schema
 
-- **Person**: Stores participant information and login codes
+- **User**: Stores account information and a bcrypt password hash
+- **Person**: Links a user to a group with its approval status
 - **WishlistItem**: Stores gift items for each person
 - **Assignment**: Tracks who gives to whom each year
 - **AdminConfig**: Stores admin password (hashed)
@@ -147,7 +149,7 @@ Make sure to set these in your production environment:
 
 ```
 DATABASE_URL=your-production-database-url
-ADMIN_PASSWORD=your-secure-admin-password
+SESSION_SECRET=your-random-session-secret-at-least-32-characters
 ```
 
 ### Build and Deploy
@@ -190,7 +192,6 @@ npm run dev -- -p 3001
 ## Future Enhancements
 
 Possible features to add:
-- Email notifications when assignments are created
 - Gift budget suggestions
 - Mark gifts as purchased
 - Historical assignments from previous years
@@ -204,3 +205,7 @@ This is a personal project for family use. Feel free to adapt it for your own ne
 ## Support
 
 For issues or questions, please check the code comments or create an issue in the repository.
+
+### Existing groups and requests
+
+The account migration preserves groups, participants, wishes and assignments. A participant or administrator who still has the previous signed session can create an account in the same browser to link their existing access. Memberships are never claimed by name alone. Personal access codes are removed. Email is used only to sign in; no email delivery or SMTP is required.

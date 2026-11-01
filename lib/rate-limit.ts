@@ -56,7 +56,7 @@ export function rateLimit(
     return {
       success: false,
       response: NextResponse.json(
-        { error: "Too many requests. Please try again later." },
+        { error: "Muitas tentativas. Tente novamente mais tarde." },
         {
           status: 429,
           headers: {
@@ -75,8 +75,8 @@ export function rateLimit(
 export const authRateLimit = (request: NextRequest) =>
   rateLimit(request, "auth", { windowMs: 15 * 60 * 1000, maxRequests: 10 }); // 10 attempts per 15 minutes
 
-export const magicLinkRateLimit = (request: NextRequest) =>
-  rateLimit(request, "magic-link", { windowMs: 15 * 60 * 1000, maxRequests: 5 }); // 5 per 15 minutes
+export const joinRateLimit = (request: NextRequest) =>
+  rateLimit(request, "join", { windowMs: 15 * 60 * 1000, maxRequests: 10 });
 
 export const adminAuthRateLimit = (request: NextRequest) =>
   rateLimit(request, "admin-auth", { windowMs: 15 * 60 * 1000, maxRequests: 10 }); // 10 per 15 minutes

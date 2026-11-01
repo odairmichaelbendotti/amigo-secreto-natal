@@ -2,87 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateSecretSantaAssignments } from "@/lib/secret-santa";
 import { getSession } from "@/lib/session";
+import { getDrawBlockReason } from "@/lib/draw-rules";
+
+class DrawError extends Error {}
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-
-    if (!session.isAdmin) {
-      return NextResponse.json({ error: "Admin authentication required" }, { status: 403 });
-    }
-
     const { groupId, year } = await request.json();
-
-    if (!groupId) {
-      return NextResponse.json({ error: "Group ID is required" }, { status: 400 });
-    }
-
-    // Verify admin owns this group
-    if (session.adminGroupId !== groupId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
+    if (!session.isAdmin || !groupId || session.adminGroupId !== groupId) return NextResponse.json({ error: "É necessário administrar este grupo" }, { status: 403 });
     const currentYear = year || new Date().getFullYear();
-
-    // Check if assignments already exist for this group and year
-    const existingAssignments = await prisma.assignment.findMany({
-      where: { groupId, year: currentYear },
-    });
-
-    if (existingAssignments.length > 0) {
-      return NextResponse.json(
-        { error: "Assignments already exist for this year. Delete them first to regenerate." },
-        { status: 400 }
-      );
-    }
-
-    // Get all people in this group
-    const people = await prisma.person.findMany({
-      where: { groupId },
-      select: { id: true, name: true },
-    });
-
-    if (people.length < 3) {
-      return NextResponse.json(
-        { error: "You need at least 3 people to generate Secret Santa assignments" },
-        { status: 400 }
-      );
-    }
-
-    // Generate assignments
-    const assignments = generateSecretSantaAssignments(people);
-
-    if (!assignments) {
-      return NextResponse.json(
-        { error: "Failed to generate valid assignments" },
-        { status: 500 }
-      );
-    }
-
-    // Save assignments to database
-    const createdAssignments = await Promise.all(
-      assignments.map((assignment) =>
-        prisma.assignment.create({
-          data: {
-            groupId,
-            giverId: assignment.giverId,
-            receiverId: assignment.receiverId,
-            year: currentYear,
-          },
-          include: {
-            giver: true,
-            receiver: true,
-          },
-        })
-      )
-    );
-
-    return NextResponse.json({
-      assignments: createdAssignments,
-      count: createdAssignments.length,
-    });
+    const assignments = await prisma.$transaction(async (tx) => {
+      if (await tx.assignment.count({ where: { groupId, year: currentYear } })) throw new DrawError("O sorteio deste ano já foi realizado. Exclua os resultados antes de realizar um novo sorteio.");
+      const people = await tx.person.findMany({ where: { groupId, status: "APPROVED" }, select: { id: true, name: true } });
+      const blockReason = getDrawBlockReason(people.length);
+      if (blockReason) throw new DrawError(blockReason);
+      const pairs = generateSecretSantaAssignments(people);
+      if (!pairs) throw new DrawError("Não foi possível realizar um sorteio válido");
+      return Promise.all(pairs.map((pair) => tx.assignment.create({ data: { groupId, giverId: pair.giverId, receiverId: pair.receiverId, year: currentYear }, include: { giver: true, receiver: true } })));
+    }, { isolationLevel: "Serializable" });
+    return NextResponse.json({ assignments, count: assignments.length });
   } catch (error) {
+    if (error instanceof DrawError) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error && typeof error === "object" && "code" in error && error.code === "P2034") return NextResponse.json({ error: "O grupo foi atualizado durante o sorteio. Tente novamente." }, { status: 409 });
     console.error("Error generating assignments:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Não foi possível realizar o sorteio" }, { status: 500 });
   }
 }
