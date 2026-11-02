@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function AccountForm({ initialMode = "register", inviteCode, next = "/groups", onSuccess }: { initialMode?: "register" | "login"; inviteCode?: string; next?: "/groups" | "/create"; onSuccess?: () => void }) {
   const router = useRouter();
@@ -33,7 +34,7 @@ export default function AccountForm({ initialMode = "register", inviteCode, next
     <form onSubmit={submit} className="space-y-4">
       {mode === "register" && <div><label htmlFor="fullName" className="block text-sm text-gray-300 mb-2">Nome completo</label><input id="fullName" autoComplete="name" value={name} onChange={e => setName(e.target.value)} maxLength={120} required className={input} /></div>}
       <div><label htmlFor="email" className="block text-sm text-gray-300 mb-2">E-mail</label><input id="email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} maxLength={254} required className={input} /></div>
-      <div><label htmlFor="password" className="block text-sm text-gray-300 mb-2">Senha</label><input id="password" type="password" autoComplete={mode === "register" ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} minLength={mode === "register" ? 4 : undefined} required className={input} />{mode === "register" && <p className="text-xs text-gray-400 mt-2">Use qualquer combinação com pelo menos 4 caracteres.</p>}</div>
+      <div><label htmlFor="password" className="block text-sm text-gray-300 mb-2">Senha</label><PasswordInput key={mode} id="password" autoComplete={mode === "register" ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} minLength={mode === "register" ? 4 : undefined} required className={input} />{mode === "register" && <p className="text-xs text-gray-400 mt-2">Use qualquer combinação com pelo menos 4 caracteres.</p>}</div>
       {error && <p role="alert" className="text-santa-red">{error}</p>}
       <button disabled={loading} className="w-full min-h-[56px] bg-santa-green text-white px-4 py-4 rounded-xl font-bold hover:bg-santa-green-dark transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-santa-green/40 disabled:opacity-50">{loading ? "Aguarde..." : inviteCode ? (mode === "register" ? "Criar conta e solicitar entrada" : "Fazer login e solicitar entrada") : mode === "register" ? "Criar conta" : next === "/create" ? "Fazer login e criar meu grupo" : "Fazer login e acessar meus grupos"}</button>
     </form>

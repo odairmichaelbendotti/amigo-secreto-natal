@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function AdminLogin() {
   const [password, setPassword] = useState("");
@@ -76,9 +77,9 @@ export default function AdminLogin() {
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
               Senha do administrador
             </label>
-            <input
-              type="password"
+            <PasswordInput
               id="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 bg-santa-dark border border-white/10 rounded-lg focus:ring-2 focus:ring-santa-gold focus:border-transparent text-santa-snow placeholder-gray-500"
