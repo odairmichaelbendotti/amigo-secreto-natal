@@ -48,7 +48,7 @@ beforeEach(() => {
   Object.assign(mockSession, { isAdmin: true, adminGroupId: group.id, isLoggedIn: false, personId: undefined, personName: undefined, groupId: undefined, groupName: undefined, loginMethod: undefined, pendingPersonId: undefined, pendingGroupId: undefined, adminPersonId: undefined });
   mockSession.save.mockResolvedValue(undefined);
   mockHash.mockResolvedValue("hashed");
-  mockDb.group.findUnique.mockResolvedValue(null);
+  mockDb.group.findUnique.mockResolvedValue({ ...group, finishedAt: null });
   mockDb.group.create.mockResolvedValue({ ...group, people: [{ id: "admin-person" }] });
   mockDb.$transaction.mockImplementation((callback) => callback(mockDb));
   mockDb.person.findFirst.mockResolvedValue(null);
@@ -111,7 +111,8 @@ describe("approved participant access", () => {
     mockDb.person.findMany.mockResolvedValue([{ id: "one", name: "Ana Silva" }, { id: "two", name: "Bia Silva" }]);
     const response = await draw(post("/api/assignments/generate", { groupId: group.id, year: 2026 }));
     expect(response.status).toBe(200);
-    expect((await response.json()).assignments).toEqual([
+    expect(await response.json()).toEqual({ count: 2 });
+    expect(mockDb.assignment.create.mock.calls.map(([args]) => args.data)).toEqual([
       { groupId: group.id, giverId: "one", receiverId: "two", year: 2026 },
       { groupId: group.id, giverId: "two", receiverId: "one", year: 2026 },
     ]);

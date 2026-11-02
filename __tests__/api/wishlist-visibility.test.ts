@@ -62,8 +62,8 @@ test("enabled lists remain available to their owner and their giver", async () =
   const data = await (await personalData()).json();
   expect(data.wishlistsEnabled).toBe(true); expect(data.wishlistItems).toEqual([item]); expect(data.assignment.receiver.wishlistItems).toEqual([item]);
 });
-test.each([false, true])("administrator results follow wishlist visibility %j", async wishlistsEnabled => {
-  mockDb.group.findUnique.mockResolvedValue({ wishlistsEnabled });
+test.each([false, true])("final administrator results follow wishlist visibility %j", async wishlistsEnabled => {
+  mockDb.group.findUnique.mockResolvedValue({ wishlistsEnabled, finishedAt: new Date() });
   const response = await assignments(new NextRequest("http://localhost:3000/api/assignments?groupId=group-1"));
   expect(response.status).toBe(200);
   const data = await response.json();

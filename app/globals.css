@@ -481,6 +481,9 @@ button, a { transition: background-color var(--motion-fast), color var(--motion-
 .participant-card-info strong { display: block; color: var(--ink); font-size: 13px; font-weight: 650; overflow-wrap: anywhere; }
 .participant-card-info > span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
 .participant-card > .ui-pill { flex-shrink: 0; font-size: 10px; }
+.draw-results-heading { flex-wrap: wrap; }
+.draw-result-hidden { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+.draw-result-hidden .ui-icon { width: 15px; height: 15px; }
 @media (max-width: 1200px) { .participants-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) {
   .participants-grid { grid-template-columns: 1fr; }

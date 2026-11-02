@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 const mockPrisma = {
+  group: { findUnique: jest.fn() },
   adminConfig: { findUnique: jest.fn(), updateMany: jest.fn() },
   person: { findUnique: jest.fn(), findFirst: jest.fn(), findMany: jest.fn(), create: jest.fn(), delete: jest.fn() },
   assignment: { findMany: jest.fn(), create: jest.fn(), count: jest.fn() },
@@ -56,6 +57,7 @@ beforeEach(() => {
   mockPrisma.person.findFirst.mockResolvedValue(null);
   mockPrisma.person.create.mockResolvedValue(owner);
   mockPrisma.assignment.count.mockResolvedValue(0);
+  mockPrisma.group.findUnique.mockResolvedValue({ ...group, finishedAt: null });
 });
 
 test("administrator login also authenticates the linked participant", async () => {
@@ -117,9 +119,11 @@ test("the draw includes the administrator as both giver and receiver", async () 
   const body = await response.json();
   expect(response.status).toBe(200);
   expect(body.count).toBe(3);
-  expect(body.assignments.filter((assignment: { giverId: string }) => assignment.giverId === owner.id)).toHaveLength(1);
-  expect(body.assignments.filter((assignment: { receiverId: string }) => assignment.receiverId === owner.id)).toHaveLength(1);
-  expect(body.assignments.every((assignment: { giverId: string; receiverId: string }) => assignment.giverId !== assignment.receiverId)).toBe(true);
+  expect(body).not.toHaveProperty("assignments");
+  const saved = mockPrisma.assignment.create.mock.calls.map(([args]) => args.data);
+  expect(saved.filter(assignment => assignment.giverId === owner.id)).toHaveLength(1);
+  expect(saved.filter(assignment => assignment.receiverId === owner.id)).toHaveLength(1);
+  expect(saved.every(assignment => assignment.giverId !== assignment.receiverId)).toBe(true);
 });
 
 describe("joining an existing group as the administrator", () => {

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-export type IconName = "gift" | "groups" | "plus" | "arrow" | "link" | "settings" | "check" | "clock" | "logout" | "menu" | "close" | "sparkles" | "heart" | "list" | "copy";
+export type IconName = "gift" | "groups" | "plus" | "arrow" | "link" | "settings" | "check" | "clock" | "logout" | "menu" | "close" | "sparkles" | "heart" | "list" | "copy" | "eye-off";
 const paths: Record<IconName, ReactNode> = {
+  "eye-off": <path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2c.7-.1 1.4-.2 2.1-.2 5.5 0 9 7 9 7a18 18 0 0 1-3.1 4.1M6.2 6.2A20.6 20.6 0 0 0 3 12s3.5 7 9 7c1.8 0 3.4-.7 4.8-1.7" />,
   gift: <><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M5 12v9h14v-9M12 8v13M12 8H8.5A2.5 2.5 0 1 1 11 5.5L12 8Zm0 0h3.5A2.5 2.5 0 1 0 13 5.5L12 8Z" /></>,
   groups: <><circle cx="9" cy="8" r="3" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-4-5.65" /></>,
   plus: <path d="M12 5v14M5 12h14" />,

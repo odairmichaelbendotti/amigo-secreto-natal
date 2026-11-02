@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import GroupParticipants from "@/components/GroupParticipants";
+import GroupDrawResults from "@/components/GroupDrawResults";
 import { Icon } from "@/components/Ui";
 import { formatCurrency } from "@/lib/format";
 
@@ -26,7 +27,8 @@ export default function Wishlist() {
   const [groupName, setGroupName] = useState("");
   const [groupId, setGroupId] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [section, setSection] = useState<"participation" | "participants">("participation");
+  const [section, setSection] = useState<"participation" | "participants" | "results">("participation");
+  const [finishedAt, setFinishedAt] = useState<string | null>(null);
   const [wishlistsEnabled, setWishlistsEnabled] = useState(true);
   const wishlistsEnabledRef = useRef(true);
   const [items, setItems] = useState<WishlistItem[]>([
@@ -49,6 +51,7 @@ export default function Wishlist() {
       if (!personRes.ok || !groupRes.ok) throw new Error("load");
       const data = await personRes.json();
       const groupData = (await groupRes.json()).group;
+      setFinishedAt(groupData.finishedAt || null);
       const enabled = data.wishlistsEnabled !== false && groupData.wishlistsEnabled !== false;
       // Refresh visibility without overwriting an unsaved list during polling.
       if (!preserveDraft || (enabled && !wishlistsEnabledRef.current)) {
@@ -181,9 +184,11 @@ export default function Wishlist() {
       <div className="admin-tabs" role="tablist" aria-label="Seções do grupo">
         <button type="button" role="tab" id="group-tab-participation" aria-controls="group-tab-panel" aria-selected={section === "participation"} onClick={() => setSection("participation")}>Minha participação</button>
         <button type="button" role="tab" id="group-tab-participants" aria-controls="group-tab-panel" aria-selected={section === "participants"} onClick={() => setSection("participants")}><Icon name="groups" />Participantes</button>
+        {finishedAt && <button type="button" role="tab" id="group-tab-results" aria-controls="group-tab-panel" aria-selected={section === "results"} onClick={() => setSection("results")}><Icon name="check" />Resultado final</button>}
       </div>
+      {finishedAt && <div className="welcome-banner"><div><h2>Amigo secreto finalizado!</h2><p>A lista de quem tirou quem está disponível na aba Resultado final.</p></div><Icon name="check" /></div>}
       <div key={section} id="group-tab-panel" role="tabpanel" aria-labelledby={`group-tab-${section}`} className="motion-content">
-      {section === "participants" ? <GroupParticipants key={groupId} groupId={groupId} personId={personId} /> : <>
+      {section === "results" && finishedAt ? <GroupDrawResults key={groupId} groupId={groupId} /> : section === "participants" ? <GroupParticipants key={groupId} groupId={groupId} personId={personId} /> : <>
       {!wishlistsEnabled && <div className="welcome-banner"><div><h2>Neste grupo, a escolha do presente é livre</h2><p>O administrador optou por ocultar as listas de desejos. Basta conferir quem você tirou e preparar seu presente.</p></div><Icon name="heart" /></div>}
       <div className="participation-grid">
         {wishlistsEnabled && <section className="ui-panel"><div className="panel-heading"><h2>Minha lista de desejos</h2><Icon name="list" /></div><p className="panel-copy">Dê uma ajudinha para quem tirar você. Adicione até 5 sugestões de presentes com seus links.</p>

@@ -3,21 +3,22 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import DrawResults, { type DrawAssignment } from "@/components/DrawResults";
 import { Icon } from "@/components/Ui";
 import { formatCurrency } from "@/lib/format";
 import { getDrawBlockReason } from "@/lib/draw-rules";
 import type { ParticipantStatus } from "@/lib/participants";
 
 interface Person { id: string; name: string; status: ParticipantStatus; _count: { wishlistItems: number } }
-interface Assignment { id: string; giver: { name: string }; receiver: { name: string; wishlistItems: { title: string; link: string }[] } }
 const currencies: Record<string, string> = { BRL: "Real brasileiro", USD: "Dólar americano", EUR: "Euro", GBP: "Libra esterlina", CAD: "Dólar canadense", AUD: "Dólar australiano", ZAR: "Rand sul-africano", JPY: "Iene japonês", CHF: "Franco suíço", SEK: "Coroa sueca", NOK: "Coroa norueguesa", DKK: "Coroa dinamarquesa", NZD: "Dólar neozelandês", MXN: "Peso mexicano", INR: "Rupia indiana", CNY: "Yuan chinês", KRW: "Won sul-coreano", SGD: "Dólar de Singapura" };
 export default function AdminDashboard() {
   const router = useRouter();
-  const [group, setGroup] = useState({ id: "", name: "", inviteCode: "" });
+  const [group, setGroup] = useState({ id: "", name: "", inviteCode: "", year: new Date().getFullYear() });
   const [origin, setOrigin] = useState("");
   const [section, setSection] = useState<"overview" | "people" | "settings" | "results">("overview");
   const [people, setPeople] = useState<Person[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignments, setAssignments] = useState<DrawAssignment[]>([]);
+  const [finishedAt, setFinishedAt] = useState<string | null>(null);
   const [wishlistsEnabled, setWishlistsEnabled] = useState(true);
   const [adminPersonId, setAdminPersonId] = useState<string | null>(null);
   const [canParticipate, setCanParticipate] = useState(false);
@@ -40,7 +41,7 @@ export default function AdminDashboard() {
     setOrigin(window.location.origin);
     fetch("/api/auth/session").then((response) => response.json()).then(async (session) => {
       if (!session.authenticated || !session.isAdmin) { router.replace("/admin"); return; }
-      setGroup({ id: session.adminGroupId, name: session.adminGroupName || "", inviteCode: session.adminInviteCode || "" });
+      setGroup({ id: session.adminGroupId, name: session.adminGroupName || "", inviteCode: session.adminInviteCode || "", year: new Date().getFullYear() });
       setAdminPersonId(session.adminPersonId || null);
       setCanParticipate(Boolean(session.isLoggedIn && session.adminPersonId && session.personId === session.adminPersonId));
       const [p, a, g] = await Promise.all([fetch(`/api/people?groupId=${session.adminGroupId}`), fetch(`/api/assignments?groupId=${session.adminGroupId}`), fetch(`/api/groups/${session.adminGroupId}`)]);
@@ -48,6 +49,8 @@ export default function AdminDashboard() {
       setPeople((await p.json()).people || []);
       setAssignments((await a.json()).assignments || []);
       const data = (await g.json()).group;
+      setGroup(current => ({ ...current, year: data.year || current.year }));
+      setFinishedAt(data.finishedAt || null);
       setWishlistsEnabled(data.wishlistsEnabled !== false);
       setBudget({ amount: data.budgetAmount, currency: data.budgetCurrency || "USD" });
       setAmount(data.budgetAmount?.toString() || ""); setCurrency(data.budgetCurrency || "USD");
@@ -66,7 +69,7 @@ export default function AdminDashboard() {
   async function refresh() {
     const [p, a] = await Promise.all([fetch(`/api/people?groupId=${group.id}`), fetch(`/api/assignments?groupId=${group.id}`)]);
     if (p.ok) setPeople((await p.json()).people);
-    if (a.ok) setAssignments((await a.json()).assignments);
+    if (a.ok) { const data = await a.json(); setAssignments(data.assignments); setFinishedAt(data.finishedAt || null); }
   }
 
   async function action(key: string, path: string, method: string, body?: object, message?: string) {
@@ -107,6 +110,14 @@ export default function AdminDashboard() {
     setWishlistsEnabled(data ? data.group.wishlistsEnabled : previous);
   }
 
+  async function finish() {
+    if (!confirm("Finalizar o amigo secreto e liberar para todos os participantes a lista de quem tirou quem? Depois disso, os resultados não poderão ser excluídos.")) return;
+    const data = await action("finish", `/api/groups/${group.id}/finish`, "POST", undefined, "Amigo secreto finalizado. O resultado completo está disponível para o grupo.");
+    if (data) { setFinishedAt(data.finishedAt); setSection("results"); }
+  }
+
+  const finishButton = !finishedAt && assignments.length > 0 && <button type="button" disabled={Boolean(busy)} aria-busy={busy === "finish"} onClick={() => void finish()} className="ui-btn ui-btn-secondary"><Icon name="check" />{busy === "finish" ? "Finalizando..." : "Finalizar amigo secreto"}</button>;
+
   const requestsPanel = <section className="ui-panel" aria-labelledby="requests-heading">
     <div className="panel-heading"><h2 id="requests-heading">Solicitações pendentes ({pending.length})</h2><Icon name="clock" /></div>
     {!pending.length ? <p className="panel-copy">Tudo em dia. Nenhuma solicitação aguardando aprovação.</p> : <ul className="request-list">{pending.map(person => <li key={person.id} className="request-row"><div className="request-person"><span className="avatar">{person.name.slice(0, 1)}</span><div><strong>{person.name}</strong><small>Quer participar do amigo secreto</small></div></div><div className="request-actions"><button disabled={Boolean(busy) || assignments.length > 0} onClick={() => void action(person.id, `/api/people/${person.id}`, "PATCH", { status: "APPROVED" }, `${person.name} foi aprovado para participar.`)} className="ui-btn ui-btn-primary ui-btn-small">Aprovar</button><button disabled={Boolean(busy)} onClick={() => void action(person.id, `/api/people/${person.id}`, "PATCH", { status: "REJECTED" }, "Solicitação não aprovada.")} className="ui-btn ui-btn-ghost ui-btn-small">Não aprovar</button></div></li>)}</ul>}
@@ -125,9 +136,9 @@ export default function AdminDashboard() {
       {drawBlockedReason && <p id="draw-block-reason" role="status" className="draw-note">{drawBlockedReason}</p>}
       <div className="draw-actions"><button disabled={Boolean(drawBlockedReason)} aria-busy={busy === "draw"} aria-describedby={drawBlockedReason ? "draw-block-reason" : undefined} onClick={() => {
         const confirmation = approved.length === 2 ? "Com 2 participantes, um tirará o outro. Realizar o sorteio?" : "Realizar o sorteio com os participantes aprovados?";
-        if (confirm(confirmation)) void action("draw", "/api/assignments/generate", "POST", { groupId: group.id, year: new Date().getFullYear() }, "Sorteio realizado com sucesso.");
+        if (confirm(confirmation)) void action("draw", "/api/assignments/generate", "POST", { groupId: group.id, year: group.year }, "Sorteio realizado com sucesso.");
       }} className="ui-btn ui-btn-primary"><Icon name="gift" />{busy === "draw" ? "Realizando sorteio..." : "Realizar sorteio"}</button></div>
-    </> : <><p className="ui-hint">O sorteio já foi realizado. Para sortear novamente, exclua os resultados atuais.</p><div className="draw-actions"><button onClick={() => setSection("results")} className="ui-btn ui-btn-primary">Ver resultado <Icon name="arrow" /></button><button disabled={Boolean(busy)} onClick={() => { if (confirm("Excluir os resultados atuais do sorteio?")) void action("draw", `/api/assignments?groupId=${group.id}`, "DELETE", undefined, "Resultados excluídos. Você pode avaliar novas solicitações e sortear novamente."); }} className="ui-btn ui-btn-danger ui-btn-small">Excluir resultados do sorteio</button></div></>}
+    </> : <><p className="ui-hint">{finishedAt ? "Amigo secreto finalizado. A lista completa está liberada para os participantes." : "O sorteio já foi realizado. Depois da troca de presentes, finalize o amigo secreto para revelar ao grupo quem tirou quem."}</p><div className="draw-actions"><button onClick={() => setSection("results")} className="ui-btn ui-btn-primary">Ver resultado <Icon name="arrow" /></button>{finishButton}{!finishedAt && <button disabled={Boolean(busy)} onClick={() => { if (confirm("Excluir os resultados atuais do sorteio?")) void action("draw", `/api/assignments?groupId=${group.id}`, "DELETE", undefined, "Resultados excluídos. Você pode avaliar novas solicitações e sortear novamente."); }} className="ui-btn ui-btn-danger ui-btn-small">Excluir resultados do sorteio</button>}</div></>}
   </section>;
 
   return <AppShell active="admin" admin participant={canParticipate} onLogout={async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/"); }}>
@@ -136,7 +147,7 @@ export default function AdminDashboard() {
       <div className="stats-grid">
         <div className="stat-card"><span className="stat-icon"><Icon name="groups" /></span><div><strong>{approved.length}</strong><p>Participantes aprovados</p></div></div>
         <div className="stat-card"><span className="stat-icon"><Icon name="clock" /></span><div><strong>{pending.length}</strong><p>Solicitações pendentes</p></div></div>
-        <div className="stat-card"><span className="stat-icon"><Icon name="gift" /></span><div><strong>{assignments.length ? "Realizado" : "Em preparo"}</strong><p>Status do sorteio</p></div></div>
+        <div className="stat-card"><span className="stat-icon"><Icon name="gift" /></span><div><strong>{finishedAt ? "Finalizado" : assignments.length ? "Realizado" : "Em preparo"}</strong><p>Status do sorteio</p></div></div>
       </div>
       <div className="admin-tabs" role="tablist" aria-label="Seções do painel">{([{ key: "overview", label: "Visão geral" }, { key: "people", label: "Participantes" }, { key: "settings", label: "Configurações" }, { key: "results", label: "Resultado" }] as const).map(tab => <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={section === tab.key} aria-controls="admin-tab-panel" onClick={() => setSection(tab.key)}>{tab.label}{tab.key === "people" && pending.length > 0 && <span className="tab-count">{pending.length}</span>}</button>)}</div>
       {error && <p role="alert" className="ui-alert">{error}</p>}
@@ -157,7 +168,7 @@ export default function AdminDashboard() {
           <section className="ui-panel"><div className="panel-heading"><h2>Valor do presente</h2><Icon name="gift" /></div><p className="panel-copy">Uma referência para deixar todo mundo à vontade. O valor é opcional.</p><form onSubmit={saveBudget} className="budget-form"><div className="ui-field"><label htmlFor="budgetAmount">Valor (opcional)</label><input id="budgetAmount" type="number" min="0.01" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="50,00" className="ui-input" /></div><div className="ui-field"><label htmlFor="budgetCurrency">Moeda</label><select id="budgetCurrency" value={currency} onChange={e => setCurrency(e.target.value)} className="ui-input">{Object.entries(currencies).map(([key, label]) => <option key={key} value={key}>{key} - {label}</option>)}</select></div><button disabled={Boolean(busy)} className="ui-btn ui-btn-primary">Atualizar valor</button></form><p className="budget-current">{budget.amount ? `Valor atual: ${formatCurrency(budget.amount, budget.currency)}` : "Nenhum valor definido"}</p></section>
           {participationPanel}
         </>}
-        {section === "results" && <section className="ui-panel"><div className="panel-heading"><h2>Resultado do sorteio ({assignments.length})</h2><Icon name="sparkles" /></div>{!assignments.length ? <div className="ui-empty"><Icon name="gift" /><p>O sorteio ainda não foi realizado. Reúna pelo menos 2 participantes aprovados e faça o sorteio na Visão geral.</p></div> : <div className="table-wrap"><table className="ui-table"><thead><tr><th>Quem presenteia</th><th>Quem recebe</th>{wishlistsEnabled && <th>Lista de desejos</th>}</tr></thead><tbody>{assignments.map(assignment => <tr key={assignment.id}><td>{assignment.giver.name}</td><td>{assignment.receiver.name}</td>{wishlistsEnabled && <td>{assignment.receiver.wishlistItems.length} itens</td>}</tr>)}</tbody></table></div>}</section>}
+        {section === "results" && <DrawResults assignments={assignments} wishlistsEnabled={wishlistsEnabled} finished={Boolean(finishedAt)}>{finishButton && <div className="draw-actions">{finishButton}</div>}</DrawResults>}
       </div>
     </>}
   </AppShell>;
