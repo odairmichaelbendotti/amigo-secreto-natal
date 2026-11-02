@@ -47,7 +47,7 @@ function JoinContent() {
     </form> : user ? <div className="ui-form">
       <div className="invite-summary"><span className="avatar">{user.name.slice(0, 1)}</span><div><strong>Olá, {user.name}</strong><p>Sua conta está pronta para participar.</p></div></div>
       <p className="panel-copy">Solicite sua participação. Você acompanha a aprovação em Meus grupos.</p>
-      <button onClick={request} disabled={busy} className="ui-btn ui-btn-primary ui-btn-wide">{busy ? "Solicitando..." : "Solicitar participação"}<Icon name="arrow" /></button>
+      <button onClick={request} disabled={busy} aria-busy={busy} className="ui-btn ui-btn-primary ui-btn-wide">{busy ? "Solicitando..." : "Solicitar participação"}<Icon name="arrow" /></button>
       <Link href="/groups" className="auth-bottom-link">Ir para Meus grupos</Link>
     </div> : <AccountForm inviteCode={group.inviteCode} />}
   </AuthLayout>;

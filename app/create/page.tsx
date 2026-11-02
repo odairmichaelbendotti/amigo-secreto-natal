@@ -28,7 +28,7 @@ export default function CreateGroup() {
         <div className="ui-field"><label htmlFor="year">Ano</label><input id="year" type="number" min={2024} max={2100} value={year} onChange={e => setYear(Number(e.target.value))} required className="ui-input" /></div>
       </div>
       <label className="ui-check"><input type="checkbox" checked={adminParticipates} onChange={e => setAdminParticipates(e.target.checked)} /><span><strong>Quero participar do amigo secreto</strong><small>Seu nome também entra no sorteio. Desmarque se quiser apenas organizar.</small></span></label>
-      <button disabled={loading} className="ui-btn ui-btn-primary ui-btn-wide">{loading ? "Criando..." : "Criar grupo"}<Icon name="arrow" /></button>
+      <button disabled={loading} aria-busy={loading} className="ui-btn ui-btn-primary ui-btn-wide">{loading ? "Criando..." : "Criar grupo"}<Icon name="arrow" /></button>
     </form>}
     <Link href="/groups" className="auth-bottom-link">Acessar Meus grupos</Link>
   </AuthLayout>;

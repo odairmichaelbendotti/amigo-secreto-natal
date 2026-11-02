@@ -66,7 +66,7 @@ export default function AdminLogin() {
     <form onSubmit={handleSubmit} className="ui-form">
       <div className="ui-field"><label htmlFor="password">Senha do administrador</label><PasswordInput id="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Sua senha de acesso" required className="ui-input" /></div>
       {error && <p role="alert" className="ui-alert">{error}</p>}
-      <button type="submit" disabled={loading} className="ui-btn ui-btn-primary ui-btn-wide">{loading ? "Autenticando..." : "Entrar"}<Icon name="arrow" /></button>
+      <button type="submit" disabled={loading} aria-busy={loading} className="ui-btn ui-btn-primary ui-btn-wide">{loading ? "Autenticando..." : "Entrar"}<Icon name="arrow" /></button>
     </form>
   </AuthLayout>;
 }

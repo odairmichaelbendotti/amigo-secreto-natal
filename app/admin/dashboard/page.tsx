@@ -123,7 +123,7 @@ export default function AdminDashboard() {
     {approved.length === 2 && <p className="ui-hint">Com 2 participantes, um necessariamente tira o outro. Convide mais uma pessoa para haver surpresa.</p>}
     {!assignments.length ? <>
       {drawBlockedReason && <p id="draw-block-reason" role="status" className="draw-note">{drawBlockedReason}</p>}
-      <div className="draw-actions"><button disabled={Boolean(drawBlockedReason)} aria-describedby={drawBlockedReason ? "draw-block-reason" : undefined} onClick={() => {
+      <div className="draw-actions"><button disabled={Boolean(drawBlockedReason)} aria-busy={busy === "draw"} aria-describedby={drawBlockedReason ? "draw-block-reason" : undefined} onClick={() => {
         const confirmation = approved.length === 2 ? "Com 2 participantes, um tirará o outro. Realizar o sorteio?" : "Realizar o sorteio com os participantes aprovados?";
         if (confirm(confirmation)) void action("draw", "/api/assignments/generate", "POST", { groupId: group.id, year: new Date().getFullYear() }, "Sorteio realizado com sucesso.");
       }} className="ui-btn ui-btn-primary"><Icon name="gift" />{busy === "draw" ? "Realizando sorteio..." : "Realizar sorteio"}</button></div>
@@ -141,7 +141,7 @@ export default function AdminDashboard() {
       <div className="admin-tabs" role="tablist" aria-label="Seções do painel">{([{ key: "overview", label: "Visão geral" }, { key: "people", label: "Participantes" }, { key: "settings", label: "Configurações" }, { key: "results", label: "Resultado" }] as const).map(tab => <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={section === tab.key} aria-controls="admin-tab-panel" onClick={() => setSection(tab.key)}>{tab.label}{tab.key === "people" && pending.length > 0 && <span className="tab-count">{pending.length}</span>}</button>)}</div>
       {error && <p role="alert" className="ui-alert">{error}</p>}
       {success && <p role="status" className="ui-alert ui-alert-success">{success}</p>}
-      <div id="admin-tab-panel" role="tabpanel" aria-labelledby={`tab-${section}`} className="admin-stack">
+      <div key={section} id="admin-tab-panel" role="tabpanel" aria-labelledby={`tab-${section}`} className="admin-stack motion-content">
         {section === "overview" && <>
           <div className="admin-grid"><section className="ui-panel" aria-labelledby="invite-heading"><div className="panel-heading"><h2 id="invite-heading">Link de convite do grupo</h2><Icon name="link" /></div><p className="panel-copy">Compartilhe com seus convidados. Eles criam uma conta e você aprova a participação por aqui.</p><div className="copy-row"><input aria-label="Link de convite do grupo" readOnly value={invitation} onFocus={e => e.target.select()} className="ui-input" /><button aria-label="Copiar link do grupo" onClick={copyInvite} disabled={!invitation} className="ui-btn ui-btn-secondary"><Icon name="copy" /><span className="copy-label">Copiar link</span></button></div><p className="ui-hint">Um único link para reunir todo mundo.</p></section>{drawPanel}</div>
           {(pending.length > 0 || !adminPersonId) && <div className="admin-grid">{pending.length > 0 && requestsPanel}{participationPanel}</div>}
