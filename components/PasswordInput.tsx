@@ -17,7 +17,7 @@ export default function PasswordInput({ id, className = "", disabled, ...props }
       aria-label={label}
       aria-controls={id}
       aria-pressed={visible}
-      className="absolute inset-y-0 right-0 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-r-lg px-3 text-sm font-semibold text-santa-gold hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-santa-gold disabled:opacity-50"
+      className="password-toggle"
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 shrink-0">
         {visible ? <>

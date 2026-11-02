@@ -43,6 +43,7 @@ test("administrator can register participation in an existing group", async ({ p
   await page.getByLabel("Seu nome como participante").fill(person.name);
   await page.getByRole("button", { name: "Participar do sorteio", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Sua participação no sorteio" })).toHaveCount(0);
+  await page.getByRole("tab", { name: "Participantes", exact: true }).click();
   await expect(page.getByRole("row", { name: /Ana Administradora/ })).toBeVisible();
   await page.getByRole("link", { name: "Minha participação" }).click();
   await expect(page.getByRole("heading", { name: "Minha lista de desejos" })).toBeVisible();

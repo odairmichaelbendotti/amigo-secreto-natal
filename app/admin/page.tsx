@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import AuthLayout from "@/components/AuthLayout";
+import { Icon } from "@/components/Ui";
 import PasswordInput from "@/components/PasswordInput";
 
 export default function AdminLogin() {
@@ -61,54 +62,11 @@ export default function AdminLogin() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-santa-dark p-4">
-      <div className="bg-[#151528] p-8 rounded-2xl border border-white/10 card-glow w-full max-w-md">
-        <div className="text-center mb-6">
-          <div className="text-4xl mb-3">🎅</div>
-          <h1 className="text-3xl font-bold text-santa-red mb-2 font-display">Área do administrador</h1>
-          {groupName && (
-            <p className="text-gray-400">{groupName}</p>
-          )}
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Senha do administrador
-            </label>
-            <PasswordInput
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-santa-dark border border-white/10 rounded-lg focus:ring-2 focus:ring-santa-gold focus:border-transparent text-santa-snow placeholder-gray-500"
-              placeholder="Digite a senha do administrador"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="bg-santa-red/10 border border-santa-red/30 text-santa-red px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-santa-red text-white py-3 rounded-xl font-semibold hover:bg-santa-red-dark transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transform"
-          >
-            {loading ? "Autenticando..." : "Entrar"}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-gray-400 hover:text-santa-gold transition-colors">
-            &larr; Voltar ao início
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  return <AuthLayout title="Área do administrador" eyebrow="ACESSO DO ORGANIZADOR" description={groupName || "Entre para cuidar dos detalhes do seu amigo secreto."}>
+    <form onSubmit={handleSubmit} className="ui-form">
+      <div className="ui-field"><label htmlFor="password">Senha do administrador</label><PasswordInput id="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Sua senha de acesso" required className="ui-input" /></div>
+      {error && <p role="alert" className="ui-alert">{error}</p>}
+      <button type="submit" disabled={loading} className="ui-btn ui-btn-primary ui-btn-wide">{loading ? "Autenticando..." : "Entrar"}<Icon name="arrow" /></button>
+    </form>
+  </AuthLayout>;
 }

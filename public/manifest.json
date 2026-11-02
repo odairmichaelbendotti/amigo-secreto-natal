@@ -4,8 +4,8 @@
   "description": "Organize seu amigo secreto online e de graça",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F172A",
-  "theme_color": "#EF4444",
+  "background_color": "#f5f6f1",
+  "theme_color": "#234f3e",
   "orientation": "portrait-primary",
   "icons": [
     {

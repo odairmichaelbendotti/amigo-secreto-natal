@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import AppShell from "@/components/AppShell";
+import { Icon } from "@/components/Ui";
 import { formatCurrency } from "@/lib/format";
 import { getDrawBlockReason } from "@/lib/draw-rules";
 import type { ParticipantStatus } from "@/lib/participants";
@@ -10,14 +11,11 @@ import type { ParticipantStatus } from "@/lib/participants";
 interface Person { id: string; name: string; status: ParticipantStatus; _count: { wishlistItems: number } }
 interface Assignment { id: string; giver: { name: string }; receiver: { name: string; wishlistItems: { title: string; link: string }[] } }
 const currencies: Record<string, string> = { BRL: "Real brasileiro", USD: "Dólar americano", EUR: "Euro", GBP: "Libra esterlina", CAD: "Dólar canadense", AUD: "Dólar australiano", ZAR: "Rand sul-africano", JPY: "Iene japonês", CHF: "Franco suíço", SEK: "Coroa sueca", NOK: "Coroa norueguesa", DKK: "Coroa dinamarquesa", NZD: "Dólar neozelandês", MXN: "Peso mexicano", INR: "Rupia indiana", CNY: "Yuan chinês", KRW: "Won sul-coreano", SGD: "Dólar de Singapura" };
-const panel = "bg-[#151528] p-6 rounded-2xl border border-white/10 card-glow";
-const input = "w-full px-4 py-2 bg-santa-dark border border-white/10 rounded-lg text-santa-snow";
-const button = "px-4 py-2 rounded-lg font-semibold min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed";
-
 export default function AdminDashboard() {
   const router = useRouter();
   const [group, setGroup] = useState({ id: "", name: "", inviteCode: "" });
   const [origin, setOrigin] = useState("");
+  const [section, setSection] = useState<"overview" | "people" | "settings" | "results">("overview");
   const [people, setPeople] = useState<Person[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [wishlistsEnabled, setWishlistsEnabled] = useState(true);
@@ -109,66 +107,58 @@ export default function AdminDashboard() {
     setWishlistsEnabled(data ? data.group.wishlistsEnabled : previous);
   }
 
-  if (loading) return <main className="min-h-screen flex items-center justify-center text-santa-gold">Carregando...</main>;
-  return <main className="min-h-screen bg-santa-dark p-4 md:p-8"><div className="max-w-7xl mx-auto">
-    <header className="flex flex-col sm:flex-row sm:justify-between gap-4 mb-8">
-      <div><h1 className="text-2xl sm:text-4xl font-bold text-santa-red font-display">Painel do administrador</h1><p className="text-gray-300 mt-2">{group.name}</p></div>
-      <div className="flex gap-3 flex-wrap items-start"><Link href="/groups" className="text-santa-gold px-4 py-2">Meus grupos</Link>{canParticipate && <Link href="/wishlist" className={`${button} bg-santa-green text-white`}>Minha participação</Link>}<button onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/"); }} className={`${button} bg-white/10 text-santa-snow`}>Sair</button></div>
-    </header>
-    {error && <p role="alert" className="bg-santa-red/10 text-santa-red border border-santa-red/30 p-4 rounded-lg mb-5">{error}</p>}
-    {success && <p role="status" className="bg-santa-green/10 text-santa-green border border-santa-green/30 p-4 rounded-lg mb-5">{success}</p>}
+  const requestsPanel = <section className="ui-panel" aria-labelledby="requests-heading">
+    <div className="panel-heading"><h2 id="requests-heading">Solicitações pendentes ({pending.length})</h2><Icon name="clock" /></div>
+    {!pending.length ? <p className="panel-copy">Tudo em dia. Nenhuma solicitação aguardando aprovação.</p> : <ul className="request-list">{pending.map(person => <li key={person.id} className="request-row"><div className="request-person"><span className="avatar">{person.name.slice(0, 1)}</span><div><strong>{person.name}</strong><small>Quer participar do amigo secreto</small></div></div><div className="request-actions"><button disabled={Boolean(busy) || assignments.length > 0} onClick={() => void action(person.id, `/api/people/${person.id}`, "PATCH", { status: "APPROVED" }, `${person.name} foi aprovado para participar.`)} className="ui-btn ui-btn-primary ui-btn-small">Aprovar</button><button disabled={Boolean(busy)} onClick={() => void action(person.id, `/api/people/${person.id}`, "PATCH", { status: "REJECTED" }, "Solicitação não aprovada.")} className="ui-btn ui-btn-ghost ui-btn-small">Não aprovar</button></div></li>)}</ul>}
+    {assignments.length > 0 && pending.length > 0 && <p className="ui-hint">Para aprovar novas pessoas, exclua os resultados e realize um novo sorteio.</p>}
+  </section>;
+  const participationPanel = !adminPersonId && <section className="ui-panel" aria-labelledby="participation-heading"><div className="panel-heading"><h2 id="participation-heading">Sua participação no sorteio</h2><Icon name="gift" /></div><p className="panel-copy">Você está apenas organizando. Quer entrar na brincadeira também?</p><form onSubmit={join} className="join-admin-form">
+    {approved.length > 0 && <div className="ui-field"><label htmlFor="existingParticipant">Já está na lista de participantes?</label><select id="existingParticipant" value={existingPersonId} onChange={e => setExistingPersonId(e.target.value)} className="ui-input"><option value="">Criar meu cadastro</option>{approved.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}</select></div>}
+    <div className="join-admin-row">{!existingPersonId && <div className="ui-field"><label htmlFor="participantName">Seu nome como participante</label><input id="participantName" value={participantName} onChange={e => setParticipantName(e.target.value)} required className="ui-input" /></div>}<button disabled={Boolean(busy)} className="ui-btn ui-btn-primary">{busy === "join" ? "Cadastrando..." : "Participar do sorteio"}</button></div>
+  </form></section>;
+  const drawPanel = <section className="ui-panel" aria-labelledby="draw-heading">
+    <div className="panel-heading"><h2 id="draw-heading">Sorteio</h2><Icon name="sparkles" /></div>
+    <p className="draw-count"><strong>{approved.length}</strong>{approved.length === 1 ? "participante aprovado" : "participantes aprovados"}</p>
+    <p className="panel-copy">Somente as pessoas aprovadas entram no sorteio. Solicitações pendentes não contam para o mínimo de 2 participantes.</p>
+    {approved.length === 2 && <p className="ui-hint">Com 2 participantes, um necessariamente tira o outro. Convide mais uma pessoa para haver surpresa.</p>}
+    {!assignments.length ? <>
+      {drawBlockedReason && <p id="draw-block-reason" role="status" className="draw-note">{drawBlockedReason}</p>}
+      <div className="draw-actions"><button disabled={Boolean(drawBlockedReason)} aria-describedby={drawBlockedReason ? "draw-block-reason" : undefined} onClick={() => {
+        const confirmation = approved.length === 2 ? "Com 2 participantes, um tirará o outro. Realizar o sorteio?" : "Realizar o sorteio com os participantes aprovados?";
+        if (confirm(confirmation)) void action("draw", "/api/assignments/generate", "POST", { groupId: group.id, year: new Date().getFullYear() }, "Sorteio realizado com sucesso.");
+      }} className="ui-btn ui-btn-primary"><Icon name="gift" />{busy === "draw" ? "Realizando sorteio..." : "Realizar sorteio"}</button></div>
+    </> : <><p className="ui-hint">O sorteio já foi realizado. Para sortear novamente, exclua os resultados atuais.</p><div className="draw-actions"><button onClick={() => setSection("results")} className="ui-btn ui-btn-primary">Ver resultado <Icon name="arrow" /></button><button disabled={Boolean(busy)} onClick={() => { if (confirm("Excluir os resultados atuais do sorteio?")) void action("draw", `/api/assignments?groupId=${group.id}`, "DELETE", undefined, "Resultados excluídos. Você pode avaliar novas solicitações e sortear novamente."); }} className="ui-btn ui-btn-danger ui-btn-small">Excluir resultados do sorteio</button></div></>}
+  </section>;
 
-    <section className={`${panel} mb-8`} aria-labelledby="invite-heading"><h2 id="invite-heading" className="text-xl font-bold text-santa-gold mb-2">Link de convite do grupo</h2><p className="text-gray-300 text-sm mb-4">Compartilhe este link. Cada convidado cria sua conta com nome completo, e-mail e senha e solicita sua aprovação.</p><div className="flex flex-col sm:flex-row gap-3"><input aria-label="Link de convite do grupo" readOnly value={invitation} onFocus={(e) => e.target.select()} className={`${input} flex-1 min-w-0`} /><button onClick={copyInvite} disabled={!invitation} className={`${button} bg-santa-green text-white`}>Copiar link do grupo</button></div></section>
-
-    {!adminPersonId && <section className={`${panel} mb-8`} aria-labelledby="participation-heading"><h2 id="participation-heading" className="text-xl font-bold text-santa-snow mb-2">Sua participação no sorteio</h2><p className="text-gray-300 text-sm mb-4">Você está apenas organizando o grupo. Se quiser, também pode participar do sorteio.</p><form onSubmit={join} className="flex flex-col sm:flex-row flex-wrap gap-4 items-end">
-      {approved.length > 0 && <div className="w-full sm:w-auto"><label htmlFor="existingParticipant" className="block text-sm text-gray-300 mb-2">Já está na lista de participantes?</label><select id="existingParticipant" value={existingPersonId} onChange={(e) => setExistingPersonId(e.target.value)} className={input}><option value="">Criar meu cadastro</option>{approved.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></div>}
-      {!existingPersonId && <div className="w-full sm:w-auto"><label htmlFor="participantName" className="block text-sm text-gray-300 mb-2">Seu nome como participante</label><input id="participantName" value={participantName} onChange={(e) => setParticipantName(e.target.value)} required className={input} /></div>}
-      <button disabled={Boolean(busy)} className={`${button} bg-santa-green text-white`}>{busy === "join" ? "Cadastrando..." : "Participar do sorteio"}</button>
-    </form></section>}
-
-    <section className={`${panel} mb-8`} aria-labelledby="requests-heading"><h2 id="requests-heading" className="text-2xl font-bold text-santa-gold mb-4">Solicitações pendentes ({pending.length})</h2>
-      {!pending.length ? <p className="text-gray-400">Nenhuma solicitação aguardando aprovação.</p> : <ul className="space-y-3">{pending.map((person) => <li key={person.id} className="bg-santa-dark/50 border border-white/10 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"><span className="font-semibold text-santa-snow">{person.name}</span><div className="flex gap-3"><button disabled={Boolean(busy) || assignments.length > 0} onClick={() => void action(person.id, `/api/people/${person.id}`, "PATCH", { status: "APPROVED" }, `${person.name} foi aprovado para participar.`)} className={`${button} bg-santa-green text-white`}>Aprovar</button><button disabled={Boolean(busy)} onClick={() => void action(person.id, `/api/people/${person.id}`, "PATCH", { status: "REJECTED" }, "Solicitação não aprovada.")} className={`${button} bg-santa-red/20 text-santa-red`}>Não aprovar</button></div></li>)}</ul>}
-      {assignments.length > 0 && pending.length > 0 && <p className="text-sm text-gray-400 mt-3">Para aprovar novas pessoas, exclua os resultados e realize um novo sorteio.</p>}
-    </section>
-
-    <section className={`${panel} mb-8`} aria-labelledby="wishlists-heading">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 id="wishlists-heading" className="text-xl font-bold text-santa-snow mb-2">Listas de desejos do grupo</h2>
-          <p id="wishlists-description" className="text-gray-400 text-sm max-w-2xl">Você decide se o grupo usa sugestões de presentes. Ao ocultar, os participantes veem apenas quem tiraram no sorteio e escolhem o presente livremente. As listas já salvas são preservadas caso você ative novamente.</p>
-        </div>
-        <label className="flex items-center gap-3 text-santa-snow font-semibold cursor-pointer shrink-0">
-          <input type="checkbox" role="switch" checked={wishlistsEnabled} disabled={Boolean(busy)} onChange={e => void toggleWishlists(e.target.checked)} aria-describedby="wishlists-description" className="h-6 w-6 accent-santa-green disabled:cursor-wait" />
-          Exibir listas de desejos
-        </label>
+  return <AppShell active="admin" admin participant={canParticipate} onLogout={async () => { await fetch("/api/auth/logout", { method: "POST" }); router.push("/"); }}>
+    <header className="page-header"><div><span className="eyebrow">SEU GRUPO, DO SEU JEITO</span><h1>Painel do administrador</h1><p>{group.name || "Organize os detalhes e deixe a surpresa acontecer."}</p></div><span className="ui-pill"><Icon name="settings" />Organizador</span></header>
+    {loading ? <div className="ui-loading">Carregando...</div> : <>
+      <div className="stats-grid">
+        <div className="stat-card"><span className="stat-icon"><Icon name="groups" /></span><div><strong>{approved.length}</strong><p>Participantes aprovados</p></div></div>
+        <div className="stat-card"><span className="stat-icon"><Icon name="clock" /></span><div><strong>{pending.length}</strong><p>Solicitações pendentes</p></div></div>
+        <div className="stat-card"><span className="stat-icon"><Icon name="gift" /></span><div><strong>{assignments.length ? "Realizado" : "Em preparo"}</strong><p>Status do sorteio</p></div></div>
       </div>
-      <p className="text-sm text-santa-gold mt-4">{busy === "wishlists" ? "Salvando configuração..." : wishlistsEnabled ? "Ativadas: os participantes podem adicionar sugestões de presentes." : "Ocultas: o grupo participa sem listas de desejos."}</p>
-    </section>
-
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-      <section className={panel}><h2 className="text-xl font-bold text-santa-snow mb-4">Valor do presente</h2><form onSubmit={saveBudget} className="space-y-4"><div><label htmlFor="budgetAmount" className="block text-sm text-gray-300 mb-2">Valor (opcional)</label><input id="budgetAmount" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="50,00" className={input} /></div><div><label htmlFor="budgetCurrency" className="block text-sm text-gray-300 mb-2">Moeda</label><select id="budgetCurrency" value={currency} onChange={(e) => setCurrency(e.target.value)} className={input}>{Object.entries(currencies).map(([key, label]) => <option key={key} value={key}>{key} - {label}</option>)}</select></div><p className="text-sm text-gray-400">{budget.amount ? `Valor atual: ${formatCurrency(budget.amount, budget.currency)}` : "Nenhum valor definido"}</p><button disabled={Boolean(busy)} className={`${button} bg-santa-gold text-santa-dark`}>Atualizar valor</button></form></section>
-      <section className={panel} aria-labelledby="draw-heading">
-        <h2 id="draw-heading" className="text-xl font-bold text-santa-snow mb-4">Sorteio</h2>
-        <p className="text-gray-300 mb-4">{approved.length} {approved.length === 1 ? "participante aprovado" : "participantes aprovados"}</p>
-        <p className="text-sm text-gray-400 mb-4">Somente as pessoas aprovadas entram no sorteio. Solicitações pendentes não contam para o mínimo de 2 participantes.</p>
-        {approved.length === 2 && <p className="text-sm text-santa-gold mb-4">Com 2 participantes, um necessariamente tira o outro. Para haver surpresa sobre quem cada pessoa vai tirar, convide pelo menos mais uma pessoa.</p>}
-        {!assignments.length ? <>
-          {drawBlockedReason && <p id="draw-block-reason" role="status" className="text-sm text-santa-gold mb-4">{drawBlockedReason}</p>}
-          <button disabled={Boolean(drawBlockedReason)} aria-describedby={drawBlockedReason ? "draw-block-reason" : undefined} onClick={() => {
-            const confirmation = approved.length === 2 ? "Com 2 participantes, um tirará o outro. Realizar o sorteio?" : "Realizar o sorteio com os participantes aprovados?";
-            if (confirm(confirmation)) void action("draw", "/api/assignments/generate", "POST", { groupId: group.id, year: new Date().getFullYear() }, "Sorteio realizado com sucesso.");
-          }} className={`${button} bg-santa-red text-white`}>{busy === "draw" ? "Realizando sorteio..." : "Realizar sorteio"}</button>
-        </> : <>
-          <p className="text-sm text-gray-400 mb-4">O sorteio já foi realizado. Para sortear novamente, exclua os resultados atuais.</p>
-          <button disabled={Boolean(busy)} onClick={() => { if (confirm("Excluir os resultados atuais do sorteio?")) void action("draw", `/api/assignments?groupId=${group.id}`, "DELETE", undefined, "Resultados excluídos. Você pode avaliar novas solicitações e sortear novamente."); }} className={`${button} bg-santa-gold text-santa-dark`}>Excluir resultados do sorteio</button>
+      <div className="admin-tabs" role="tablist" aria-label="Seções do painel">{([{ key: "overview", label: "Visão geral" }, { key: "people", label: "Participantes" }, { key: "settings", label: "Configurações" }, { key: "results", label: "Resultado" }] as const).map(tab => <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={section === tab.key} aria-controls="admin-tab-panel" onClick={() => setSection(tab.key)}>{tab.label}{tab.key === "people" && pending.length > 0 && <span className="tab-count">{pending.length}</span>}</button>)}</div>
+      {error && <p role="alert" className="ui-alert">{error}</p>}
+      {success && <p role="status" className="ui-alert ui-alert-success">{success}</p>}
+      <div id="admin-tab-panel" role="tabpanel" aria-labelledby={`tab-${section}`} className="admin-stack">
+        {section === "overview" && <>
+          <div className="admin-grid"><section className="ui-panel" aria-labelledby="invite-heading"><div className="panel-heading"><h2 id="invite-heading">Link de convite do grupo</h2><Icon name="link" /></div><p className="panel-copy">Compartilhe com seus convidados. Eles criam uma conta e você aprova a participação por aqui.</p><div className="copy-row"><input aria-label="Link de convite do grupo" readOnly value={invitation} onFocus={e => e.target.select()} className="ui-input" /><button aria-label="Copiar link do grupo" onClick={copyInvite} disabled={!invitation} className="ui-btn ui-btn-secondary"><Icon name="copy" /><span className="copy-label">Copiar link</span></button></div><p className="ui-hint">Um único link para reunir todo mundo.</p></section>{drawPanel}</div>
+          {(pending.length > 0 || !adminPersonId) && <div className="admin-grid">{pending.length > 0 && requestsPanel}{participationPanel}</div>}
+          {pending.length === 0 && adminPersonId && <div className="welcome-banner"><div><h2>Tudo pronto para o próximo passo.</h2><p>{assignments.length ? "O sorteio foi realizado. Cada pessoa já pode conferir seu amigo secreto." : "Convidados aprovados? Quando todos estiverem prontos, é só realizar o sorteio."}</p></div><Icon name="heart" /></div>}
         </>}
-      </section>
-    </div>
-
-    <section className={`${panel} mb-8`}><h2 className="text-2xl font-bold text-santa-snow mb-4">Participantes aprovados ({approved.length})</h2>{!approved.length ? <p className="text-gray-400">Nenhum participante aprovado. Compartilhe o link do grupo e avalie as solicitações.</p> : <div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead className="text-santa-gold"><tr><th className="p-3">Nome completo</th>{wishlistsEnabled && <th className="p-3">Lista de desejos</th>}<th className="p-3">Ações</th></tr></thead><tbody>{approved.map((person) => <tr key={person.id} className="border-t border-white/10"><td className="p-3 text-santa-snow">{person.name}{person.id === adminPersonId && " (administrador)"}</td>{wishlistsEnabled && <td className="p-3 text-gray-300">{person._count.wishlistItems}/5 itens</td>}<td className="p-3"><button disabled={Boolean(busy) || person.id === adminPersonId || assignments.length > 0} onClick={() => { if (confirm(`Remover ${person.name} do grupo?`)) void action(person.id, `/api/people/${person.id}`, "DELETE", undefined, "Participante removido."); }} className={`${button} text-santa-red`}>Remover</button></td></tr>)}</tbody></table></div>}</section>
-
-    {rejected.length > 0 && <details className={`${panel} mb-8`}><summary className="font-semibold text-gray-300 cursor-pointer">Solicitações não aprovadas ({rejected.length})</summary><ul className="mt-4 space-y-3">{rejected.map((person) => <li key={person.id} className="flex flex-wrap justify-between items-center gap-3 text-gray-300"><span>{person.name}</span><button disabled={Boolean(busy) || assignments.length > 0} onClick={() => void action(person.id, `/api/people/${person.id}`, "PATCH", { status: "APPROVED" }, "Participação aprovada.")} className={`${button} bg-santa-green text-white`}>Aprovar</button></li>)}</ul></details>}
-
-    {assignments.length > 0 && <section className={panel}><h2 className="text-2xl font-bold text-santa-snow mb-4">Resultado do sorteio ({assignments.length})</h2><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="text-santa-gold"><tr><th className="p-3">Quem presenteia</th><th className="p-3">Quem recebe</th>{wishlistsEnabled && <th className="p-3">Lista de desejos</th>}</tr></thead><tbody>{assignments.map((assignment) => <tr key={assignment.id} className="border-t border-white/10 text-gray-300"><td className="p-3">{assignment.giver.name}</td><td className="p-3">{assignment.receiver.name}</td>{wishlistsEnabled && <td className="p-3">{assignment.receiver.wishlistItems.length} itens</td>}</tr>)}</tbody></table></div></section>}
-  </div></main>;
+        {section === "people" && <>
+          {requestsPanel}
+          <section className="ui-panel"><div className="panel-heading"><h2>Participantes aprovados ({approved.length})</h2><Icon name="groups" /></div>{!approved.length ? <p className="panel-copy">Nenhum participante aprovado. Compartilhe o link do grupo e avalie as solicitações.</p> : <div className="table-wrap"><table className="ui-table"><thead><tr><th>Nome completo</th>{wishlistsEnabled && <th>Lista de desejos</th>}<th>Ações</th></tr></thead><tbody>{approved.map(person => <tr key={person.id}><td><div className="table-person"><span className="avatar">{person.name.slice(0, 1)}</span><span>{person.name}{person.id === adminPersonId && <small>Administrador</small>}</span></div></td>{wishlistsEnabled && <td>{person._count.wishlistItems}/5 itens</td>}<td><button disabled={Boolean(busy) || person.id === adminPersonId || assignments.length > 0} onClick={() => { if (confirm(`Remover ${person.name} do grupo?`)) void action(person.id, `/api/people/${person.id}`, "DELETE", undefined, "Participante removido."); }} className="ui-btn ui-btn-danger ui-btn-small">Remover</button></td></tr>)}</tbody></table></div>}</section>
+          {rejected.length > 0 && <details className="ui-panel"><summary className="ui-link">Solicitações não aprovadas ({rejected.length})</summary><ul className="request-list">{rejected.map(person => <li key={person.id} className="request-row"><strong>{person.name}</strong><button disabled={Boolean(busy) || assignments.length > 0} onClick={() => void action(person.id, `/api/people/${person.id}`, "PATCH", { status: "APPROVED" }, "Participação aprovada.")} className="ui-btn ui-btn-primary ui-btn-small">Aprovar</button></li>)}</ul></details>}
+        </>}
+        {section === "settings" && <>
+          <section className="ui-panel" aria-labelledby="wishlists-heading"><div className="settings-row"><div><div className="panel-heading"><h2 id="wishlists-heading">Listas de desejos do grupo</h2></div><p id="wishlists-description" className="panel-copy">Dê liberdade para escolher os presentes. Ao ocultar as listas, os participantes veem apenas quem tiraram. As sugestões já salvas são preservadas caso você ative novamente.</p></div><label className="setting-toggle"><input type="checkbox" role="switch" checked={wishlistsEnabled} disabled={Boolean(busy)} onChange={e => void toggleWishlists(e.target.checked)} aria-describedby="wishlists-description" />Exibir listas de desejos</label></div><p className="settings-status">{busy === "wishlists" ? "Salvando configuração..." : wishlistsEnabled ? "Ativadas: os participantes podem adicionar sugestões de presentes." : "Ocultas: o grupo participa sem listas de desejos."}</p></section>
+          <section className="ui-panel"><div className="panel-heading"><h2>Valor do presente</h2><Icon name="gift" /></div><p className="panel-copy">Uma referência para deixar todo mundo à vontade. O valor é opcional.</p><form onSubmit={saveBudget} className="budget-form"><div className="ui-field"><label htmlFor="budgetAmount">Valor (opcional)</label><input id="budgetAmount" type="number" min="0.01" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="50,00" className="ui-input" /></div><div className="ui-field"><label htmlFor="budgetCurrency">Moeda</label><select id="budgetCurrency" value={currency} onChange={e => setCurrency(e.target.value)} className="ui-input">{Object.entries(currencies).map(([key, label]) => <option key={key} value={key}>{key} - {label}</option>)}</select></div><button disabled={Boolean(busy)} className="ui-btn ui-btn-primary">Atualizar valor</button></form><p className="budget-current">{budget.amount ? `Valor atual: ${formatCurrency(budget.amount, budget.currency)}` : "Nenhum valor definido"}</p></section>
+          {participationPanel}
+        </>}
+        {section === "results" && <section className="ui-panel"><div className="panel-heading"><h2>Resultado do sorteio ({assignments.length})</h2><Icon name="sparkles" /></div>{!assignments.length ? <div className="ui-empty"><Icon name="gift" /><p>O sorteio ainda não foi realizado. Reúna pelo menos 2 participantes aprovados e faça o sorteio na Visão geral.</p></div> : <div className="table-wrap"><table className="ui-table"><thead><tr><th>Quem presenteia</th><th>Quem recebe</th>{wishlistsEnabled && <th>Lista de desejos</th>}</tr></thead><tbody>{assignments.map(assignment => <tr key={assignment.id}><td>{assignment.giver.name}</td><td>{assignment.receiver.name}</td>{wishlistsEnabled && <td>{assignment.receiver.wishlistItems.length} itens</td>}</tr>)}</tbody></table></div>}</section>}
+      </div>
+    </>}
+  </AppShell>;
 }
