@@ -113,6 +113,49 @@ test("approved account selects a group from a fresh session without codes", asyn
   expect((await select(post({}), { params: { id: group.id } })).status).toBe(200);
   expect(mockSession).toMatchObject({ isLoggedIn: true, isAdmin: false, personId: person.id, groupId: group.id, userId: user.id });
 });
+
+test("the creator can open their group as both administrator and approved participant", async () => {
+  mockSession.userId = user.id;
+  mockDb.group.findFirst.mockResolvedValue({ ...group, people: [{ ...person, status: "APPROVED" }], adminConfig: { userId: user.id, personId: person.id } });
+  const response = await select(post({}), { params: { id: group.id } });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ isAdmin: true, isLoggedIn: true });
+  expect(mockSession).toMatchObject({ userId: user.id, personId: person.id, adminGroupId: group.id, adminPersonId: person.id });
+  expect(mockSession.save).toHaveBeenCalledTimes(1);
+  expect(mockDb.group.findFirst.mock.calls[0][0].select).toEqual({
+    id: true, name: true, inviteCode: true,
+    people: { where: { userId: user.id, status: "APPROVED" }, select: { id: true, name: true } },
+    adminConfig: { select: { userId: true, personId: true } },
+  });
+});
+
+test("opening a group without an account returns a JSON authentication error", async () => {
+  const response = await select(post({}), { params: { id: group.id } });
+  expect(response.status).toBe(401);
+  expect(await response.json()).toEqual({ error: "Entre na sua conta" });
+  expect(mockDb.group.findFirst).not.toHaveBeenCalled();
+});
+
+test("an outdated database returns an actionable JSON error instead of an HTML error page", async () => {
+  mockSession.userId = user.id;
+  mockDb.group.findFirst.mockRejectedValue({ code: "P2022", message: "private database details" });
+  const response = await select(post({}), { params: { id: group.id } });
+  expect(response.status).toBe(503);
+  const data = await response.json();
+  expect(data.code).toBe("DATABASE_SCHEMA_OUTDATED");
+  expect(data.error).toContain("atualização da aplicação");
+  expect(JSON.stringify(data)).not.toContain("private database details");
+  expect(mockSession.save).not.toHaveBeenCalled();
+});
+
+test("an unexpected database failure returns a safe JSON error", async () => {
+  mockSession.userId = user.id;
+  mockDb.group.findFirst.mockRejectedValue(new Error("private connection details"));
+  const response = await select(post({}), { params: { id: group.id } });
+  expect(response.status).toBe(500);
+  expect(await response.json()).toEqual({ error: "Não foi possível abrir o grupo. Tente novamente em instantes." });
+  expect(mockSession.save).not.toHaveBeenCalled();
+});
 test.each([true, false])("group creation links account and respects admin participation %j", async adminParticipates => {
   mockSession.userId = user.id; mockDb.group.findUnique.mockResolvedValue(null);
   mockDb.group.create.mockResolvedValue({ ...group, people: adminParticipates ? [{ ...person, status: "APPROVED" }] : [] });

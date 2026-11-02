@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { isGroupTheme } from "@/lib/group-theme";
 
 export const dynamic = 'force-dynamic';
 
@@ -58,7 +59,9 @@ export async function PATCH(
       return NextResponse.json({ error: "É necessário entrar como administrador" }, { status: 403 });
     }
 
-    const { budgetAmount, budgetCurrency, wishlistsEnabled } = await request.json();
+    const { budgetAmount, budgetCurrency, wishlistsEnabled, theme } = await request.json();
+
+    if (theme !== undefined && !isGroupTheme(theme)) return NextResponse.json({ error: "Escolha um tema válido para o grupo" }, { status: 400 });
 
     if (wishlistsEnabled !== undefined && typeof wishlistsEnabled !== "boolean") {
       return NextResponse.json({ error: "Informe se as listas de desejos devem ser exibidas" }, { status: 400 });
@@ -91,6 +94,7 @@ export async function PATCH(
         ...(budgetAmount !== undefined ? { budgetAmount } : {}),
         ...(budgetCurrency !== undefined ? { budgetCurrency } : {}),
         ...(wishlistsEnabled !== undefined ? { wishlistsEnabled } : {}),
+        ...(theme !== undefined ? { theme } : {}),
         updatedAt: new Date(),
       },
     });

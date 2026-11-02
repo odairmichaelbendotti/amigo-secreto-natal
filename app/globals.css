@@ -493,3 +493,47 @@ button, a { transition: background-color var(--motion-fast), color var(--motion-
   .participant-card > .ui-pill { justify-self: start; }
 }
 @media (prefers-reduced-motion: no-preference) { .participants-grid > .participant-card:nth-child(-n+6) { animation: content-arrive var(--motion-normal) var(--motion-ease) backwards; } }
+
+/* Themes add lightweight ornaments inside each group's own surfaces. */
+.fruit-decor { display: block; flex-shrink: 0; pointer-events: none; user-select: none; }
+.group-card-meta-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.group-card-meta-row .group-card-meta { min-width: 0; }
+.group-card-fruit { width: 90px; height: 43px; margin-top: -6px; margin-bottom: 5px; }
+.group-card[data-group-theme="fruits"] { border-color: #eddfc6; background: linear-gradient(150deg, #fffaf0 0%, #fff 53%); }
+.group-card[data-group-theme="fruits"] .group-avatar { background: #fff0d4; color: #ac7737; }
+.group-surface[data-group-theme="fruits"] .group-theme-header { position: relative; padding: 15px 170px 15px 20px; background: #fff8e9; border: 1px solid #f0e3c9; border-radius: 14px; min-height: 100px; }
+.group-header-fruit { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 140px; height: 78px; }
+.recipient-fruit { width: 88px; height: 36px; margin: -5px 0; }
+.group-surface[data-group-theme="fruits"] .participant-card { border-color: #ecdfc8; background: #fffcf5; }
+.group-surface[data-group-theme="fruits"] .participant-card .avatar { position: relative; background: #f8edda; }
+.group-surface[data-group-theme="fruits"] .participant-card .avatar::after { content: ''; position: absolute; top: -3px; right: -2px; width: 10px; height: 6px; border-radius: 9px 0 9px 0; background: #7ca186; transform: rotate(-12deg); }
+.theme-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-top: 17px; padding: 0; border: 0; }
+.theme-option { position: relative; display: flex; flex-direction: column; min-width: 0; padding: 13px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+.theme-option.is-selected { border-color: #6d9475; box-shadow: 0 0 0 1px #6d9475; background: #fafcf7; }
+.theme-option:focus-within { outline: 3px solid #a9c4ae; outline-offset: 3px; }
+.theme-option > input { position: absolute; top: 14px; right: 14px; width: 17px; height: 17px; accent-color: var(--forest); z-index: 1; }
+.theme-option > strong { font-size: 13px; margin: 10px 0 5px; }
+.theme-option > span:last-child { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.theme-options:disabled .theme-option { cursor: wait; opacity: .65; }
+.theme-preview { display: flex; align-items: center; justify-content: center; height: 76px; border-radius: 7px; }
+.theme-preview-plain { flex-direction: column; gap: 7px; background: #f0f3eb; }
+.theme-preview-plain .ui-icon { color: #7f9a7b; width: 23px; height: 23px; }
+.theme-preview-plain > span { height: 4px; width: 70px; background: #d7e0d0; border-radius: 5px; }
+.theme-preview-plain > span:last-child { width: 45px; }
+.theme-preview-fruits { background: #fff2d8; }
+.theme-preview-fruits .fruit-decor { width: 156px; height: 74px; }
+.theme-picker-actions { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 16px; }
+.theme-picker-actions .ui-hint { margin: 0; }
+@media (max-width: 1000px) {
+  .group-surface[data-group-theme="fruits"] .group-theme-header { padding-right: 115px; }
+  .group-header-fruit { right: 9px; width: 95px; height: 65px; }
+}
+@media (max-width: 760px) {
+  .group-surface[data-group-theme="fruits"] .group-theme-header { padding: 16px 90px 16px 16px; }
+  .group-header-fruit { width: 76px; right: 6px; top: 42px; height: 55px; }
+  .group-surface[data-group-theme="fruits"] .group-theme-header .budget-pill { font-size: 10px; padding: 7px 9px; }
+  .theme-option { padding: 10px; }
+  .theme-preview { height: 65px; }
+  .theme-preview-fruits .fruit-decor { width: 100%; height: 62px; }
+  .theme-picker-actions { flex-wrap: wrap; }
+}

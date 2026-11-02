@@ -4,26 +4,31 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import { Icon } from "@/components/Ui";
-interface Group { id: string; name: string; year: number; status: "PENDING" | "APPROVED" | "REJECTED" | null; isAdmin: boolean; wishlistsEnabled?: boolean }
+import FruitDecor from "@/components/FruitDecor";
+import { resolveGroupTheme, type GroupTheme } from "@/lib/group-theme";
+interface Group { id: string; name: string; year: number; status: "PENDING" | "APPROVED" | "REJECTED" | null; isAdmin: boolean; wishlistsEnabled?: boolean; theme?: GroupTheme }
 export default function MyGroups() {
   const router = useRouter();
   const [groups, setGroups] = useState<Group[]>([]);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [loading, setLoading] = useState(true); const [busy, setBusy] = useState(""); const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const load = useCallback(async () => {
     try {
       const response = await fetch("/api/account/groups", { cache: "no-store" });
       if (response.status === 401) { router.replace("/login"); return; }
       if (!response.ok) throw new Error();
-      const data = await response.json(); setUser(data.user); setGroups(data.groups); setError("");
-    } catch { setError("Não foi possível carregar seus grupos. Tente novamente."); } finally { setLoading(false); }
+      const data = await response.json(); setUser(data.user); setGroups(data.groups); setLoadError("");
+    } catch { setLoadError("Não foi possível carregar seus grupos. Tente novamente."); } finally { setLoading(false); }
   }, [router]);
   useEffect(() => { void load(); const timer = setInterval(load, 5000); window.addEventListener("focus", load); return () => { clearInterval(timer); window.removeEventListener("focus", load); }; }, [load]);
   async function enter(group: Group, admin: boolean) {
     setBusy(group.id); setError("");
     try {
-      const response = await fetch(`/api/groups/${group.id}/select`, { method: "POST" }); const data = await response.json();
-      if (!response.ok) { setError(data.error); return; }
+      const response = await fetch(`/api/groups/${group.id}/select`, { method: "POST" });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) { setError(typeof data?.error === "string" ? data.error : response.status === 401 ? "Sua sessão expirou. Faça login novamente." : "O servidor não conseguiu abrir o grupo. Tente novamente em instantes."); return; }
+      if (!data) { setError("O servidor não conseguiu abrir o grupo. Tente novamente em instantes."); return; }
       router.push(admin && data.isAdmin ? "/admin/dashboard" : "/wishlist");
     } catch { setError("Não foi possível abrir o grupo."); } finally { setBusy(""); }
   }
@@ -38,13 +43,13 @@ export default function MyGroups() {
       <div className="stat-card"><span className="stat-icon"><Icon name="check" /></span><div><strong>{approvedCount}</strong><p>Participações aprovadas</p></div></div>
       <div className="stat-card"><span className="stat-icon"><Icon name="clock" /></span><div><strong>{pendingCount}</strong><p>Aguardando aprovação</p></div></div>
     </div>
-    {error && <p role="alert" className="ui-alert">{error}</p>}
+    {(error || loadError) && <p role="alert" className="ui-alert">{error || loadError}</p>}
     <div className="section-label"><h2>Seus amigos secretos</h2><span>{groups.length} {groups.length === 1 ? "grupo" : "grupos"}</span></div>
     {loading ? <div className="ui-loading">Carregando seus grupos...</div> : <div className="groups-grid" aria-live="polite">
       {groups.length === 0 && <div className="ui-panel"><div className="ui-empty"><Icon name="gift" /><p>Você ainda não tem grupos. Abra o convite de um organizador ou crie seu grupo.</p></div><Link href="/join" className="ui-btn ui-btn-secondary">Abrir um convite <Icon name="arrow" /></Link></div>}
-      {groups.map(group => <article key={group.id} className="group-card">
+      {groups.map(group => <article key={group.id} className="group-card" data-group-theme={resolveGroupTheme(group.theme)}>
         <div className="group-card-top"><span className={`group-avatar ${group.status === "PENDING" ? "gold" : ""}`}><Icon name="gift" /></span><span className={`ui-pill ${group.status === "PENDING" ? "ui-pill-wait" : group.status === "REJECTED" ? "ui-pill-muted" : ""}`}>{group.isAdmin ? "Administrador" : group.status === "APPROVED" ? "Participação aprovada" : group.status === "PENDING" ? "Em análise" : "Não aprovada"}</span></div>
-        <h2>{group.name}</h2><p className="group-card-meta">Amigo secreto · {group.year}</p>
+        <h2>{group.name}</h2><div className="group-card-meta-row"><p className="group-card-meta">Amigo secreto · {group.year}</p>{group.theme === "fruits" && <FruitDecor className="group-card-fruit" />}</div>
         {group.status === "PENDING" && <><p className="group-pending">Aguardando aprovação do administrador</p><p className="panel-copy">Assim que sua entrada for aprovada, o acesso ao grupo aparece aqui.</p></>}
         {group.status === "REJECTED" && <p className="panel-copy">Solicitação não aprovada. Fale com o organizador.</p>}
         {group.status === "APPROVED" && <div className="group-card-actions"><button onClick={() => enter(group, false)} disabled={Boolean(busy)} aria-busy={busy === group.id} className="ui-btn ui-btn-primary ui-btn-wide">{busy === group.id ? "Abrindo..." : "Entrar no grupo"}<Icon name="arrow" /></button><p className="ui-hint">{group.wishlistsEnabled === false ? "Escolha o presente livremente e surpreenda." : "Sua lista de desejos e o resultado do sorteio."}</p>{group.isAdmin ? <button onClick={() => enter(group, true)} disabled={Boolean(busy)} className="group-admin-link">Administrar</button> : <span className="group-admin-spacer" aria-hidden="true" />}</div>}

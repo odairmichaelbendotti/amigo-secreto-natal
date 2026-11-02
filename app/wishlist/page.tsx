@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import GroupParticipants from "@/components/GroupParticipants";
 import GroupDrawResults from "@/components/GroupDrawResults";
+import FruitDecor from "@/components/FruitDecor";
+import { resolveGroupTheme, type GroupTheme } from "@/lib/group-theme";
 import { Icon } from "@/components/Ui";
 import { formatCurrency } from "@/lib/format";
 
@@ -27,6 +29,7 @@ export default function Wishlist() {
   const [groupName, setGroupName] = useState("");
   const [groupId, setGroupId] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [theme, setTheme] = useState<GroupTheme>("none");
   const [section, setSection] = useState<"participation" | "participants" | "results">("participation");
   const [finishedAt, setFinishedAt] = useState<string | null>(null);
   const [wishlistsEnabled, setWishlistsEnabled] = useState(true);
@@ -51,6 +54,7 @@ export default function Wishlist() {
       if (!personRes.ok || !groupRes.ok) throw new Error("load");
       const data = await personRes.json();
       const groupData = (await groupRes.json()).group;
+      setTheme(resolveGroupTheme(groupData.theme));
       setFinishedAt(groupData.finishedAt || null);
       const enabled = data.wishlistsEnabled !== false && groupData.wishlistsEnabled !== false;
       // Refresh visibility without overwriting an unsaved list during polling.
@@ -177,7 +181,8 @@ export default function Wishlist() {
   };
 
   return <AppShell active="participation" admin={isAdmin} participant name={personName} onLogout={handleLogout}>
-    <header className="page-header"><div><span className="eyebrow">{groupName || "SUA PARTICIPAÇÃO"}</span><h1>Olá, {personName || "participante"}!</h1><p>{wishlistsEnabled ? "Uma sugestão de presente, uma boa surpresa e um encontro para lembrar." : "Confira quem você tirou e escolha o presente livremente."}</p></div>{budget?.amount !== undefined && <span className="budget-pill"><Icon name="gift" />Valor do presente: {formatCurrency(budget.amount, budget.currency)}</span>}</header>
+    <div className="group-surface" data-group-theme={theme}>
+    <header className="page-header group-theme-header"><div><span className="eyebrow">{groupName || "SUA PARTICIPAÇÃO"}</span><h1>Olá, {personName || "participante"}!</h1><p>{wishlistsEnabled ? "Uma sugestão de presente, uma boa surpresa e um encontro para lembrar." : "Confira quem você tirou e escolha o presente livremente."}</p></div>{budget?.amount !== undefined && <span className="budget-pill"><Icon name="gift" />Valor do presente: {formatCurrency(budget.amount, budget.currency)}</span>}{theme === "fruits" && <FruitDecor className="group-header-fruit" />}</header>
     {error && <p role="alert" className="ui-alert">{error}</p>}
     {successMessage && <p role="status" className="ui-alert ui-alert-success">{successMessage}</p>}
     {loading ? <div className="ui-loading">Carregando...</div> : <>
@@ -195,12 +200,13 @@ export default function Wishlist() {
           <div className="wishlist-fields">{items.map((item, index) => <div key={index} className="wishlist-item"><span className="item-number">{String(index + 1).padStart(2, "0")}</span><input type="text" value={item.title} onChange={e => handleItemChange(index, "title", e.target.value)} placeholder="Nome do presente" aria-label={`Nome do item ${index + 1}`} className="ui-input" /><input type="url" value={item.link} onChange={e => handleItemChange(index, "link", e.target.value)} placeholder="Link do produto" aria-label={`Link do item ${index + 1}`} className="ui-input" />{items.length > 1 && <button type="button" onClick={() => handleRemoveItem(index)} aria-label={`Remover item ${index + 1}`} className="remove-item"><Icon name="close" /></button>}</div>)}</div>
           <div className="wishlist-actions">{items.length < 5 ? <button type="button" onClick={handleAddItem} className="ui-btn ui-btn-ghost ui-btn-small"><Icon name="plus" />Adicionar item</button> : <span className="ui-hint">Limite de 5 sugestões</span>}<button onClick={handleSaveWishlist} disabled={saving} aria-busy={saving} className="ui-btn ui-btn-primary">{saving ? "Salvando..." : "Salvar lista de desejos"}<Icon name="check" /></button></div>
         </section>}
-        <section className="ui-panel recipient-panel"><div className="panel-heading"><h2>Seu amigo secreto</h2><Icon name="gift" /></div>
+        <section className="ui-panel recipient-panel"><div className="panel-heading"><h2>Seu amigo secreto</h2>{theme === "fruits" ? <FruitDecor className="recipient-fruit" /> : <Icon name="gift" />}</div>
           {assignment ? <><p className="recipient-label">Você vai presentear:</p><p className="recipient-name">{assignment.receiver.name}</p>{wishlistsEnabled && <div className="recipient-wishes"><h3>Lista de desejos de {assignment.receiver.name}:</h3>{assignment.receiver.wishlistItems.length ? <ul>{assignment.receiver.wishlistItems.map((item, index) => <li key={index}><strong>{item.title}</strong><br /><a href={item.link} target="_blank" rel="noopener noreferrer">Ver sugestão de presente <Icon name="arrow" /></a></li>)}</ul> : <p className="panel-copy">{assignment.receiver.name} ainda não adicionou uma lista de desejos. Que tal escolher uma surpresa com a cara dessa pessoa?</p>}</div>}</> : <div className="ui-empty"><Icon name="sparkles" /><div><p>O sorteio do amigo secreto ainda não foi realizado.</p><p className="ui-hint">Assim que o organizador sortear, a surpresa aparece aqui.</p></div></div>}
         </section>
       </div>
       </>}
       </div>
     </>}
+    </div>
   </AppShell>;
 }

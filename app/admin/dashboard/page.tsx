@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import DrawResults, { type DrawAssignment } from "@/components/DrawResults";
+import GroupThemePicker from "@/components/GroupThemePicker";
+import { resolveGroupTheme, type GroupTheme } from "@/lib/group-theme";
 import { Icon } from "@/components/Ui";
 import { formatCurrency } from "@/lib/format";
 import { getDrawBlockReason } from "@/lib/draw-rules";
@@ -20,6 +22,7 @@ export default function AdminDashboard() {
   const [assignments, setAssignments] = useState<DrawAssignment[]>([]);
   const [finishedAt, setFinishedAt] = useState<string | null>(null);
   const [wishlistsEnabled, setWishlistsEnabled] = useState(true);
+  const [theme, setTheme] = useState<GroupTheme>("none");
   const [adminPersonId, setAdminPersonId] = useState<string | null>(null);
   const [canParticipate, setCanParticipate] = useState(false);
   const [participantName, setParticipantName] = useState("");
@@ -52,6 +55,7 @@ export default function AdminDashboard() {
       setGroup(current => ({ ...current, year: data.year || current.year }));
       setFinishedAt(data.finishedAt || null);
       setWishlistsEnabled(data.wishlistsEnabled !== false);
+      setTheme(resolveGroupTheme(data.theme));
       setBudget({ amount: data.budgetAmount, currency: data.budgetCurrency || "USD" });
       setAmount(data.budgetAmount?.toString() || ""); setCurrency(data.budgetCurrency || "USD");
       setLoading(false);
@@ -116,6 +120,11 @@ export default function AdminDashboard() {
     if (data) { setFinishedAt(data.finishedAt); setSection("results"); }
   }
 
+  async function applyTheme(selected: GroupTheme) {
+    const data = await action("theme", `/api/groups/${group.id}`, "PATCH", { theme: selected }, selected === "fruits" ? "Tema de frutas aplicado ao grupo." : "Tema removido. O grupo voltou ao visual original.");
+    if (data) setTheme(resolveGroupTheme(data.group.theme));
+  }
+
   const finishButton = !finishedAt && assignments.length > 0 && <button type="button" disabled={Boolean(busy)} aria-busy={busy === "finish"} onClick={() => void finish()} className="ui-btn ui-btn-secondary"><Icon name="check" />{busy === "finish" ? "Finalizando..." : "Finalizar amigo secreto"}</button>;
 
   const requestsPanel = <section className="ui-panel" aria-labelledby="requests-heading">
@@ -164,6 +173,7 @@ export default function AdminDashboard() {
           {rejected.length > 0 && <details className="ui-panel"><summary className="ui-link">Solicitações não aprovadas ({rejected.length})</summary><ul className="request-list">{rejected.map(person => <li key={person.id} className="request-row"><strong>{person.name}</strong><button disabled={Boolean(busy) || assignments.length > 0} onClick={() => void action(person.id, `/api/people/${person.id}`, "PATCH", { status: "APPROVED" }, "Participação aprovada.")} className="ui-btn ui-btn-primary ui-btn-small">Aprovar</button></li>)}</ul></details>}
         </>}
         {section === "settings" && <>
+          <GroupThemePicker value={theme} disabled={Boolean(busy)} saving={busy === "theme"} onApply={selected => void applyTheme(selected)} />
           <section className="ui-panel" aria-labelledby="wishlists-heading"><div className="settings-row"><div><div className="panel-heading"><h2 id="wishlists-heading">Listas de desejos do grupo</h2></div><p id="wishlists-description" className="panel-copy">Dê liberdade para escolher os presentes. Ao ocultar as listas, os participantes veem apenas quem tiraram. As sugestões já salvas são preservadas caso você ative novamente.</p></div><label className="setting-toggle"><input type="checkbox" role="switch" checked={wishlistsEnabled} disabled={Boolean(busy)} onChange={e => void toggleWishlists(e.target.checked)} aria-describedby="wishlists-description" />Exibir listas de desejos</label></div><p className="settings-status">{busy === "wishlists" ? "Salvando configuração..." : wishlistsEnabled ? "Ativadas: os participantes podem adicionar sugestões de presentes." : "Ocultas: o grupo participa sem listas de desejos."}</p></section>
           <section className="ui-panel"><div className="panel-heading"><h2>Valor do presente</h2><Icon name="gift" /></div><p className="panel-copy">Uma referência para deixar todo mundo à vontade. O valor é opcional.</p><form onSubmit={saveBudget} className="budget-form"><div className="ui-field"><label htmlFor="budgetAmount">Valor (opcional)</label><input id="budgetAmount" type="number" min="0.01" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="50,00" className="ui-input" /></div><div className="ui-field"><label htmlFor="budgetCurrency">Moeda</label><select id="budgetCurrency" value={currency} onChange={e => setCurrency(e.target.value)} className="ui-input">{Object.entries(currencies).map(([key, label]) => <option key={key} value={key}>{key} - {label}</option>)}</select></div><button disabled={Boolean(busy)} className="ui-btn ui-btn-primary">Atualizar valor</button></form><p className="budget-current">{budget.amount ? `Valor atual: ${formatCurrency(budget.amount, budget.currency)}` : "Nenhum valor definido"}</p></section>
           {participationPanel}
