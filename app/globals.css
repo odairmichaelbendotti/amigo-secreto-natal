@@ -219,13 +219,19 @@ button, a { transition: background-color var(--motion-fast), color var(--motion-
 .budget-current { color: #65745b; font-size: 12px; margin-top: 12px; }
 .participation-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; align-items: start; }
 .wishlist-fields { display: grid; gap: 9px; margin: 18px 0 12px; }
-.wishlist-item { display: grid; grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr) 28px; align-items: center; gap: 9px; }
+.wishlist-item { display: grid; grid-template-columns: 24px minmax(0, 1fr) 28px; align-items: center; gap: 9px; }
 .item-number { font-size: 12px; color: #65745b; }
 .wishlist-item .ui-input { height: 40px; font-size: 12px; }
 .remove-item { display: grid; place-items: center; width: 28px; height: 32px; color: #768568; border-radius: 6px; }
 .remove-item:hover { color: #a25446; background: #faf0ec; }
 .remove-item .ui-icon { width: 15px; height: 15px; }
 .wishlist-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 17px; }
+.wishlist-group-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 20px; font-size: 12px; }
+.group-wishlists { margin-top: 24px; }
+.wish-suggestions { list-style: none; padding: 0; margin: 0; }
+.wish-suggestions li { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 7px 0; overflow-wrap: anywhere; font-size: 13px; }
+.wish-suggestions a { color: var(--forest); text-decoration: underline; text-underline-offset: 3px; font-size: 12px; }
+.wishlist-empty { margin: 8px 0 0; font-size: 12px; }
 .recipient-panel { background: var(--forest); color: #f6f8ed; border-color: var(--forest); }
 .recipient-panel .panel-heading h2 { color: #f7f9ef; }
 .recipient-panel .panel-heading .ui-icon { color: #c4b583; }
@@ -367,7 +373,6 @@ button, a { transition: background-color var(--motion-fast), color var(--motion-
   .copy-row .ui-btn { padding: 10px 12px; }
   .copy-row .copy-label { display: none; }
   .wishlist-item { grid-template-columns: 17px minmax(0, 1fr) 27px; gap: 7px; }
-  .wishlist-item input[ type="url"] { grid-column: 2; grid-row: 2; }
   .wishlist-item .remove-item { grid-column: 3; grid-row: 1; }
   .wishlist-item .ui-input { font-size: 14px; }
   .wishlist-item { padding-bottom: 12px; border-bottom: 1px solid var(--line); }
@@ -484,13 +489,16 @@ button, a { transition: background-color var(--motion-fast), color var(--motion-
   .ui-btn[aria-busy="true"]::after { animation: loading-progress 1050ms ease-in-out infinite; }
 }
 
-/* The group roster contains public membership details only. */
+/* Approved members can see the group's participants and wishes together. */
 .participants-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
-.participant-card { display: flex; align-items: center; gap: 11px; min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 11px; background: #fbfcf8; }
+.participant-card { display: flex; flex-wrap: wrap; align-content: start; align-items: center; gap: 11px; min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 11px; background: #fbfcf8; }
 .participant-card-info { min-width: 0; flex: 1; }
 .participant-card-info strong { display: block; color: var(--ink); font-size: 13px; font-weight: 650; overflow-wrap: anywhere; }
 .participant-card-info > span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
 .participant-card > .ui-pill { flex-shrink: 0; font-size: 10px; }
+.participant-wishes { flex-basis: 100%; min-width: 0; border-top: 1px solid var(--line); padding-top: 12px; }
+.participant-wishes h3 { color: var(--muted); font-size: 11px; font-weight: 600; margin: 0 0 5px; }
+#group-participants-heading { scroll-margin-top: 24px; }
 .draw-results-heading { flex-wrap: wrap; }
 .draw-result-hidden { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
 .draw-result-hidden .ui-icon { width: 15px; height: 15px; }
@@ -501,6 +509,7 @@ button, a { transition: background-color var(--motion-fast), color var(--motion-
   .participant-card > .avatar { grid-column: 1; grid-row: 1 / 3; }
   .participant-card-info, .participant-card > .ui-pill { grid-column: 2; }
   .participant-card > .ui-pill { justify-self: start; }
+  .participant-wishes { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: no-preference) { .participants-grid > .participant-card:nth-child(-n+6) { animation: content-arrive var(--motion-normal) var(--motion-ease) backwards; } }
 

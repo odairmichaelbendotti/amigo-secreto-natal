@@ -9,7 +9,7 @@ A free, self-hosted web application for managing Secret Santa gift exchanges. Pe
 - **Group invitations**: Share a link; guests register with full name, email and password and request approval
 - **Admin Portal**: Approve or reject participation requests and generate assignments
 - **User Login**: Email/password accounts with groups linked after approval; login and registration keep users signed in for 60 days in the same browser
-- **Wishlist Management**: Each person can add 1-5 gift items with links
+- **Wishlist Management**: Add up to 5 wishes by name, with no price or product link required. All approved group members can see each other's lists, including directly on the drawn friend's card.
 - **Secret Santa Assignments**: Automated partner generation ensuring valid assignments
 - **Mobile Responsive**: Works great on phones, tablets, and desktops
 - **Data Isolation**: Each group's data is completely isolated from others

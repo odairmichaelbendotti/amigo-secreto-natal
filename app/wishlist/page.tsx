@@ -9,6 +9,7 @@ import FruitDecor from "@/components/FruitDecor";
 import { resolveGroupTheme, type GroupTheme } from "@/lib/group-theme";
 import { Icon } from "@/components/Ui";
 import { formatCurrency } from "@/lib/format";
+import WishlistSuggestions from "@/components/WishlistSuggestions";
 
 interface WishlistItem {
   id?: string;
@@ -102,9 +103,9 @@ export default function Wishlist() {
     return () => { clearInterval(timer); window.removeEventListener("focus", refresh); };
   }, [groupId, loadPersonData]);
 
-  const handleItemChange = (index: number, field: "title" | "link", value: string) => {
+  const handleItemChange = (index: number, value: string) => {
     const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
+    newItems[index] = { ...newItems[index], title: value };
     setItems(newItems);
   };
 
@@ -115,10 +116,8 @@ export default function Wishlist() {
   };
 
   const handleRemoveItem = (index: number) => {
-    if (items.length > 1) {
-      const newItems = items.filter((_, i) => i !== index);
-      setItems(newItems);
-    }
+    const newItems = items.filter((_, i) => i !== index);
+    setItems(newItems.length ? newItems : [{ title: "", link: "" }]);
   };
 
   const handleSaveWishlist = async () => {
@@ -127,13 +126,7 @@ export default function Wishlist() {
     setSaving(true);
 
     // Filter out empty items
-    const validItems = items.filter((item) => item.title.trim() && item.link.trim());
-
-    if (validItems.length < 1) {
-      setError("Adicione pelo menos 1 item à sua lista de desejos");
-      setSaving(false);
-      return;
-    }
+    const validItems = items.filter((item) => item.title.trim());
 
     if (validItems.length > 5) {
       setError("Sua lista de desejos pode ter no máximo 5 itens");
@@ -193,17 +186,21 @@ export default function Wishlist() {
       </div>
       {finishedAt && <div className="welcome-banner"><div><h2>Amigo secreto finalizado!</h2><p>A lista de quem tirou quem está disponível na aba Resultado final.</p></div><Icon name="check" /></div>}
       <div key={section} id="group-tab-panel" role="tabpanel" aria-labelledby={`group-tab-${section}`} className="motion-content">
-      {section === "results" && finishedAt ? <GroupDrawResults key={groupId} groupId={groupId} /> : section === "participants" ? <GroupParticipants key={groupId} groupId={groupId} personId={personId} /> : <>
+      {section === "results" && finishedAt ? <GroupDrawResults key={groupId} groupId={groupId} /> : section === "participants" ? <GroupParticipants key={groupId} groupId={groupId} personId={personId} wishlistsEnabled={wishlistsEnabled} /> : <>
       {!wishlistsEnabled && <div className="welcome-banner"><div><h2>Neste grupo, a escolha do presente é livre</h2><p>O administrador optou por ocultar as listas de desejos. Basta conferir quem você tirou e preparar seu presente.</p></div><Icon name="heart" /></div>}
       <div className="participation-grid">
-        {wishlistsEnabled && <section className="ui-panel"><div className="panel-heading"><h2>Minha lista de desejos</h2><Icon name="list" /></div><p className="panel-copy">Dê uma ajudinha para quem tirar você. Adicione até 5 sugestões de presentes com seus links.</p>
-          <div className="wishlist-fields">{items.map((item, index) => <div key={index} className="wishlist-item"><span className="item-number">{String(index + 1).padStart(2, "0")}</span><input type="text" value={item.title} onChange={e => handleItemChange(index, "title", e.target.value)} placeholder="Nome do presente" aria-label={`Nome do item ${index + 1}`} className="ui-input" /><input type="url" value={item.link} onChange={e => handleItemChange(index, "link", e.target.value)} placeholder="Link do produto" aria-label={`Link do item ${index + 1}`} className="ui-input" />{items.length > 1 && <button type="button" onClick={() => handleRemoveItem(index)} aria-label={`Remover item ${index + 1}`} className="remove-item"><Icon name="close" /></button>}</div>)}</div>
-          <div className="wishlist-actions">{items.length < 5 ? <button type="button" onClick={handleAddItem} className="ui-btn ui-btn-ghost ui-btn-small"><Icon name="plus" />Adicionar item</button> : <span className="ui-hint">Limite de 5 sugestões</span>}<button onClick={handleSaveWishlist} disabled={saving} aria-busy={saving} className="ui-btn ui-btn-primary">{saving ? "Salvando..." : "Salvar lista de desejos"}<Icon name="check" /></button></div>
+        {wishlistsEnabled && <section className="ui-panel" aria-labelledby="my-wishlist-heading"><div className="panel-heading"><h2 id="my-wishlist-heading">Minha lista de desejos</h2><Icon name="list" /></div><p className="panel-copy">Escreva o que gostaria de ganhar e salve. Sua lista fica visível para todos do grupo.</p>
+          <form onSubmit={event => { event.preventDefault(); void handleSaveWishlist(); }}>
+          <fieldset disabled={saving} className="wishlist-fields"><legend className="sr-only">Seus desejos (até 5 itens)</legend>{items.map((item, index) => <div key={index} className="wishlist-item"><span className="item-number">{String(index + 1).padStart(2, "0")}</span><input type="text" value={item.title} onChange={e => handleItemChange(index, e.target.value)} placeholder={index === 0 ? "Ex.: um livro, chocolate, camiseta tamanho M" : "O que mais você gostaria de ganhar?"} aria-label={`Nome do item ${index + 1}`} maxLength={200} className="ui-input" /><button type="button" onClick={() => handleRemoveItem(index)} aria-label={`Remover item ${index + 1}`} className="remove-item"><Icon name="close" /></button></div>)}</fieldset>
+          <div className="wishlist-actions">{items.length < 5 ? <button type="button" disabled={saving} onClick={handleAddItem} className="ui-btn ui-btn-ghost ui-btn-small"><Icon name="plus" />Adicionar item</button> : <span className="ui-hint">Limite de 5 sugestões</span>}<button type="submit" disabled={saving} aria-busy={saving} className="ui-btn ui-btn-primary">{saving ? "Salvando..." : "Salvar lista de desejos"}<Icon name="check" /></button></div>
+          </form>
+          <a href="#group-participants-heading" className="ui-link wishlist-group-link">Ver os desejos de todos do grupo <Icon name="arrow" /></a>
         </section>}
         <section className="ui-panel recipient-panel"><div className="panel-heading"><h2>Seu amigo secreto</h2>{theme === "fruits" ? <FruitDecor className="recipient-fruit" /> : <Icon name="gift" />}</div>
-          {assignment ? <><p className="recipient-label">Você vai presentear:</p><p className="recipient-name">{assignment.receiver.name}</p>{wishlistsEnabled && <div className="recipient-wishes"><h3>Lista de desejos de {assignment.receiver.name}:</h3>{assignment.receiver.wishlistItems.length ? <ul>{assignment.receiver.wishlistItems.map((item, index) => <li key={index}><strong>{item.title}</strong><br /><a href={item.link} target="_blank" rel="noopener noreferrer">Ver sugestão de presente <Icon name="arrow" /></a></li>)}</ul> : <p className="panel-copy">{assignment.receiver.name} ainda não adicionou uma lista de desejos. Que tal escolher uma surpresa com a cara dessa pessoa?</p>}</div>}</> : <div className="ui-empty"><Icon name="sparkles" /><div><p>O sorteio do amigo secreto ainda não foi realizado.</p><p className="ui-hint">Assim que o organizador sortear, a surpresa aparece aqui.</p></div></div>}
+          {assignment ? <><p className="recipient-label">Você vai presentear:</p><p className="recipient-name">{assignment.receiver.name}</p>{wishlistsEnabled && <div className="recipient-wishes"><h3>Lista de desejos de {assignment.receiver.name}:</h3><WishlistSuggestions items={assignment.receiver.wishlistItems} name={assignment.receiver.name} /></div>}</> : <div className="ui-empty"><Icon name="sparkles" /><div><p>O sorteio do amigo secreto ainda não foi realizado.</p><p className="ui-hint">Assim que o organizador sortear, a surpresa aparece aqui.</p></div></div>}
         </section>
       </div>
+      {wishlistsEnabled && <div className="group-wishlists"><GroupParticipants key={groupId} groupId={groupId} personId={personId} wishlistsEnabled={wishlistsEnabled} /></div>}
       </>}
       </div>
     </>}

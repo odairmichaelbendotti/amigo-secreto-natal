@@ -43,6 +43,9 @@ describe('validateWishlistItems', () => {
   const validItem = { title: 'Cool Gadget', link: 'https://example.com/gadget' };
 
   describe('valid cases', () => {
+    it('accepts wishes with only a title', () => {
+      expect(validateWishlistItems([{ title: 'Chocolate' }, { title: 'Camiseta tamanho M' }])).toEqual({ valid: true });
+    });
     it('returns valid for 1 valid item', () => {
       const result = validateWishlistItems([validItem]);
       expect(result).toEqual({ valid: true });
@@ -62,7 +65,6 @@ describe('validateWishlistItems', () => {
         'https://example.com',
         'http://example.com/path?q=1',
         'https://sub.domain.co.uk/a/b/c',
-        'ftp://files.example.com/file.zip',
         'https://example.com/path#fragment',
       ];
       for (const link of urls) {
@@ -73,10 +75,9 @@ describe('validateWishlistItems', () => {
   });
 
   describe('invalid item counts', () => {
-    it('returns error for 0 items', () => {
+    it('accepts 0 items to clear the list', () => {
       const result = validateWishlistItems([]);
-      expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/pelo menos 1/i);
+      expect(result).toEqual({ valid: true });
     });
 
     it('returns error for 6 items', () => {
@@ -100,6 +101,9 @@ describe('validateWishlistItems', () => {
   });
 
   describe('invalid titles', () => {
+    it('rejects titles longer than 200 characters', () => {
+      expect(validateWishlistItems([{ title: 'a'.repeat(201) }]).valid).toBe(false);
+    });
     it('returns error for empty title', () => {
       const result = validateWishlistItems([{ title: '', link: 'https://example.com' }]);
       expect(result.valid).toBe(false);
@@ -114,16 +118,17 @@ describe('validateWishlistItems', () => {
   });
 
   describe('invalid links', () => {
-    it('returns error for empty link', () => {
+    it.each(['javascript:alert(1)', 'data:text/html,test', 'ftp://example.com/file'])('rejects unsafe or unsupported product links: %s', link => {
+      expect(validateWishlistItems([{ title: 'Presente', link }]).valid).toBe(false);
+    });
+    it('accepts an empty optional link', () => {
       const result = validateWishlistItems([{ title: 'Test', link: '' }]);
-      expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/link/i);
+      expect(result).toEqual({ valid: true });
     });
 
-    it('returns error for whitespace-only link', () => {
+    it('accepts a whitespace-only optional link', () => {
       const result = validateWishlistItems([{ title: 'Test', link: '   ' }]);
-      expect(result.valid).toBe(false);
-      expect(result.error).toMatch(/link/i);
+      expect(result).toEqual({ valid: true });
     });
 
     it('returns error for invalid URL', () => {

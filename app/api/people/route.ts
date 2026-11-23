@@ -11,8 +11,16 @@ export async function GET(request: NextRequest) {
     if (!session.isAdmin || !groupId || session.adminGroupId !== groupId) {
       return NextResponse.json({ error: "É necessário administrar este grupo" }, { status: 403 });
     }
-    const people = await prisma.person.findMany({ where: { groupId }, include: { _count: { select: { wishlistItems: true } } }, orderBy: { createdAt: "desc" } });
-    return NextResponse.json({ people });
+    const people = await prisma.person.findMany({
+      where: { groupId },
+      include: {
+        _count: { select: { wishlistItems: true } },
+        group: { select: { wishlistsEnabled: true } },
+        wishlistItems: { select: { title: true, link: true }, orderBy: { order: "asc" } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json({ people: people.map(({ group, wishlistItems, ...person }) => ({ ...person, wishlistItems: group.wishlistsEnabled ? wishlistItems : [] })) }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("Error fetching people:", error);
     return NextResponse.json({ error: "Não foi possível carregar os participantes" }, { status: 500 });

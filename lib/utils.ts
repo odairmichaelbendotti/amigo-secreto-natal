@@ -13,30 +13,30 @@ export function generateGroupInviteCode(): string {
   return code;
 }
 
-// Validate wishlist items (1-5 items with valid URLs)
-export function validateWishlistItems(items: Array<{ title: string; link: string }>): { valid: boolean; error?: string } {
-  if (items.length < 1) {
-    return { valid: false, error: "Sua lista de desejos deve ter pelo menos 1 item" };
-  }
-
+// An empty list clears the wishes; only the title is required for each item.
+export function validateWishlistItems(items: Array<{ title: string; link?: string }>): { valid: boolean; error?: string } {
   if (items.length > 5) {
     return { valid: false, error: "Sua lista de desejos pode ter no máximo 5 itens" };
   }
 
   for (const item of items) {
-    if (!item.title || item.title.trim().length === 0) {
+    if (!item || typeof item.title !== "string" || item.title.trim().length === 0) {
       return { valid: false, error: "Todos os itens devem ter um título" };
     }
-
-    if (!item.link || item.link.trim().length === 0) {
-      return { valid: false, error: "Todos os itens devem ter um link" };
+    if (item.title.trim().length > 200) {
+      return { valid: false, error: "Cada desejo pode ter até 200 caracteres" };
     }
-
-    // Basic URL validation
-    try {
-      new URL(item.link);
-    } catch {
-      return { valid: false, error: `URL inválida: ${item.link}` };
+    // Keep existing product links optional and safe to open.
+    if (item.link !== undefined) {
+      if (typeof item.link !== "string") return { valid: false, error: "Link inválido" };
+      if (item.link.trim()) {
+        try {
+          const url = new URL(item.link);
+          if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("protocol");
+        } catch {
+          return { valid: false, error: `URL inválida: ${item.link}` };
+        }
+      }
     }
   }
 

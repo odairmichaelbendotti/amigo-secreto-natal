@@ -46,24 +46,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "As listas de desejos estão ocultas neste grupo. A escolha do presente é livre." }, { status: 403 });
     }
 
-    // Delete existing wishlist items
-    await prisma.wishlistItem.deleteMany({
-      where: { personId },
-    });
-
-    // Create new wishlist items
-    const wishlistItems = await Promise.all(
-      items.map((item: { title: string; link: string }, index: number) =>
-        prisma.wishlistItem.create({
+    // Replace the list atomically, preserving the old wishes if saving fails.
+    const wishlistItems = await prisma.$transaction(async tx => {
+      await tx.wishlistItem.deleteMany({ where: { personId } });
+      return Promise.all(items.map((item: { title: string; link?: string }, index: number) =>
+        tx.wishlistItem.create({
           data: {
             personId,
             title: item.title.trim(),
-            link: item.link.trim(),
+            link: item.link?.trim() || "",
             order: index,
           },
         })
-      )
-    );
+      ));
+    });
 
     return NextResponse.json({ wishlistItems });
   } catch (error) {

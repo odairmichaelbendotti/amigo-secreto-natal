@@ -20,13 +20,25 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
       if (!participant) return NextResponse.json({ error: "É necessário ter participação aprovada neste grupo" }, { status: 403 });
     }
 
+    const group = await prisma.group.findUnique({ where: { id: groupId }, select: { wishlistsEnabled: true } });
+    if (!group) return NextResponse.json({ error: "Grupo não encontrado" }, { status: 404 });
+
     const people = await prisma.person.findMany({
       where: { groupId, status: "APPROVED" },
-      select: { id: true, name: true, adminFor: { select: { groupId: true } } },
+      select: {
+        id: true, name: true, adminFor: { select: { groupId: true } },
+        ...(group.wishlistsEnabled ? { wishlistItems: { select: { title: true, link: true }, orderBy: { order: "asc" as const } } } : {}),
+      },
       orderBy: { name: "asc" },
     });
 
-    return NextResponse.json({ participants: people.map(person => ({ id: person.id, name: person.name, isAdmin: person.adminFor?.groupId === groupId })) }, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({
+      wishlistsEnabled: group.wishlistsEnabled,
+      participants: people.map(person => ({
+        id: person.id, name: person.name, isAdmin: person.adminFor?.groupId === groupId,
+        wishlistItems: group.wishlistsEnabled ? person.wishlistItems.map(item => ({ title: item.title, link: item.link })) : [],
+      })),
+    }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("Error fetching group participants:", error);
     return NextResponse.json({ error: "Não foi possível carregar os participantes" }, { status: 500 });

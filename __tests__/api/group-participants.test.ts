@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import type { SessionData } from "@/lib/session";
-const mockDb = { person: { findFirst: jest.fn(), findMany: jest.fn() } };
+const mockDb = { person: { findFirst: jest.fn(), findMany: jest.fn() }, group: { findUnique: jest.fn() } };
 const mockSession: SessionData = {};
 jest.mock("@/lib/db", () => ({ prisma: mockDb }));
 jest.mock("@/lib/session", () => ({ getSession: async () => mockSession }));
@@ -11,18 +11,28 @@ beforeEach(() => {
   for (const key of Object.keys(mockSession)) delete (mockSession as Record<string, unknown>)[key];
   Object.assign(mockSession, { userId: "user-1", isLoggedIn: true, personId: "person-1", groupId: "group-1" });
   mockDb.person.findFirst.mockResolvedValue({ id: "person-1" });
+  mockDb.group.findUnique.mockResolvedValue({ wishlistsEnabled: true });
   mockDb.person.findMany.mockResolvedValue([
-    { id: "person-1", name: "Ana Silva", adminFor: null, userId: "private-user", status: "APPROVED", email: "private@example.com", wishlistItems: [{ title: "Private gift" }] },
-    { id: "person-2", name: "João Silva", adminFor: { groupId: "group-1" } },
+    { id: "person-1", name: "Ana Silva", adminFor: null, userId: "private-user", status: "APPROVED", email: "private@example.com", wishlistItems: [{ title: "Chocolate", link: "", personId: "private-id" }], giverFor: [{ receiverId: "secret-pair" }] },
+    { id: "person-2", name: "João Silva", adminFor: { groupId: "group-1" }, wishlistItems: [] },
   ]);
 });
 test("approved members see the names of approved participants and the administrator", async () => {
   const response = await get();
   expect(response.status).toBe(200);
-  expect(await response.json()).toEqual({ participants: [{ id: "person-1", name: "Ana Silva", isAdmin: false }, { id: "person-2", name: "João Silva", isAdmin: true }] });
+  expect(await response.json()).toEqual({ wishlistsEnabled: true, participants: [{ id: "person-1", name: "Ana Silva", isAdmin: false, wishlistItems: [{ title: "Chocolate", link: "" }] }, { id: "person-2", name: "João Silva", isAdmin: true, wishlistItems: [] }] });
   expect(mockDb.person.findFirst).toHaveBeenCalledWith({ where: { id: "person-1", groupId: "group-1", status: "APPROVED" }, select: { id: true } });
-  expect(mockDb.person.findMany).toHaveBeenCalledWith({ where: { groupId: "group-1", status: "APPROVED" }, select: { id: true, name: true, adminFor: { select: { groupId: true } } }, orderBy: { name: "asc" } });
+  expect(mockDb.person.findMany).toHaveBeenCalledWith({ where: { groupId: "group-1", status: "APPROVED" }, select: { id: true, name: true, adminFor: { select: { groupId: true } }, wishlistItems: { select: { title: true, link: true }, orderBy: { order: "asc" } } }, orderBy: { name: "asc" } });
   expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+});
+test("hidden wishlists cannot be read through the participant directory", async () => {
+  mockDb.group.findUnique.mockResolvedValue({ wishlistsEnabled: false });
+  const response = await get();
+  const data = await response.json();
+  expect(data.wishlistsEnabled).toBe(false);
+  expect(data.participants.every((participant: { wishlistItems: unknown[] }) => participant.wishlistItems.length === 0)).toBe(true);
+  expect(JSON.stringify(data)).not.toContain("Chocolate");
+  expect(mockDb.person.findMany.mock.calls[0][0].select).not.toHaveProperty("wishlistItems");
 });
 test("anonymous visitors cannot enumerate group members", async () => {
   Object.assign(mockSession, { userId: undefined, isLoggedIn: false });

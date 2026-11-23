@@ -43,7 +43,7 @@ test("the group's fruit ornaments can be applied and removed without affecting o
     await visitor.goto("/wishlist");
     await expect(visitor.locator(".group-surface")).toHaveAttribute("data-group-theme", "fruits");
     await expect(visitor.locator(".recipient-fruit")).toBeVisible();
-    await expect(visitor.getByText("Bia Oliveira", { exact: true })).toBeVisible();
+    await expect(visitor.locator(".recipient-panel").getByText("Bia Oliveira", { exact: true })).toBeVisible();
     await visitor.getByLabel("Nome do item 1").fill("Meu rascunho");
     await visitor.getByRole("tab", { name: "Participantes", exact: true }).click();
     await expect(visitor.getByRole("list", { name: "Participantes aprovados" }).getByText("Bia Oliveira", { exact: true })).toBeVisible();
@@ -63,7 +63,7 @@ test("the group's fruit ornaments can be applied and removed without affecting o
     await expect(visitor.locator(".group-header-fruit")).toHaveCount(0);
     await visitor.getByRole("tab", { name: "Minha participação", exact: true }).click();
     await expect(visitor.getByLabel("Nome do item 1")).toHaveValue("Meu rascunho");
-    await expect(visitor.getByText("Bia Oliveira", { exact: true })).toBeVisible();
+    await expect(visitor.locator(".recipient-panel").getByText("Bia Oliveira", { exact: true })).toBeVisible();
     await visitor.goto("/groups");
     await expect(visitor.locator(".group-card-fruit")).toHaveCount(0);
   } finally { await visitorContext.close(); }
