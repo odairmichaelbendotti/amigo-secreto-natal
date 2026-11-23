@@ -90,6 +90,11 @@ button, a { transition: background-color var(--motion-fast), color var(--motion-
 /* A wide, calm access screen. */
 .public-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; width: min(1240px, calc(100% - 64px)); margin: 0 auto; min-height: 88px; }
 .public-nav { display: flex; align-items: center; gap: 25px; }
+.home-account-nav { gap: 14px; min-width: 0; }
+.home-account-name { max-width: 180px; color: var(--forest); font-size: 13px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-session-checking { display: inline-flex; align-items: center; min-height: 42px; color: var(--muted); font-size: 12px; }
+.home-session-notice { margin: 0 0 15px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.home-session-notice .ui-link { font-size: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .auth-page { min-height: 100svh; display: flex; flex-direction: column; background: radial-gradient(ellipse at 10% 15%, #e8eee2 0, transparent 45%), #f5f6f1; }
 .auth-layout { width: min(1030px, calc(100% - 64px)); margin: auto; display: grid; grid-template-columns: .9fr 1.1fr; border: 1px solid #dce4d5; border-radius: 22px; overflow: hidden; box-shadow: 0 24px 70px #1d423411; background: white; }
 .auth-aside { display: flex; flex-direction: column; background: #eaf0e3; padding: 34px; position: relative; }
@@ -309,6 +314,11 @@ button, a { transition: background-color var(--motion-fast), color var(--motion-
 @media (max-width: 760px) {
   .public-header { width: calc(100% - 36px); min-height: 74px; }
   .public-nav { gap: 13px; }
+  .home-account-nav { gap: 7px; flex-wrap: wrap; justify-content: end; }
+  .home-account-name { flex-basis: 100%; max-width: 150px; text-align: right; font-size: 11px; }
+  .home-account-nav > .ui-btn-primary { min-height: 36px; padding: 7px 10px; font-size: 11px; gap: 5px; }
+  .home-logout { min-height: 34px; padding: 5px; }
+  .home-logout > span { display: none; }
   .public-nav > .ui-link { display: none; }
   .brand-name { font-size: 22px; }
   .brand-mark { width: 35px; height: 35px; border-radius: 10px; }

@@ -8,7 +8,7 @@ A free, self-hosted web application for managing Secret Santa gift exchanges. Pe
 - **Group Creation**: Anyone can create a new Secret Santa group
 - **Group invitations**: Share a link; guests register with full name, email and password and request approval
 - **Admin Portal**: Approve or reject participation requests and generate assignments
-- **User Login**: Email/password accounts with groups linked after approval
+- **User Login**: Email/password accounts with groups linked after approval; login and registration keep users signed in for 60 days in the same browser
 - **Wishlist Management**: Each person can add 1-5 gift items with links
 - **Secret Santa Assignments**: Automated partner generation ensuring valid assignments
 - **Mobile Responsive**: Works great on phones, tablets, and desktops
@@ -170,7 +170,7 @@ Deploy to platforms like:
 - Admin password is hashed using bcrypt
 - Login codes are randomly generated and unique
 - No sensitive data is exposed to users
-- Session data stored in browser sessionStorage (cleared on logout)
+- Sessions stored in encrypted HttpOnly cookies for 60 days, with Secure enabled in production and SameSite=Lax; logout removes the cookie
 
 ## Troubleshooting
 

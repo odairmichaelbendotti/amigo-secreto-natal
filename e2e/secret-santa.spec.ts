@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 test("home page presents accounts and the invitation flow in Portuguese", async ({ page }) => {
+  await page.route("**/api/auth/session", route => route.fulfill({ json: { authenticated: false } }));
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Gerador de Amigo Secreto", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: /Criar novo grupo/i }).first()).toBeVisible();
@@ -30,6 +31,7 @@ test("creation registers an account before creating a participating administrato
   await expect(page).toHaveURL(/\/admin\/dashboard$/);
 });
 test("login works without group metadata in browser storage", async ({ page }) => {
+  await page.route("**/api/auth/session", route => route.fulfill({ json: { authenticated: false } }));
   await page.route("**/api/auth/login", async route => {
     expect(route.request().postDataJSON()).toMatchObject({ email: "ana@example.com", password: "1234" });
     await route.fulfill({ json: { user: { name: "Ana Silva" } } });

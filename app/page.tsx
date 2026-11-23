@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Brand, GiftScene, Icon } from "@/components/Ui";
 import { Metadata } from "next";
+import { HomeSessionProvider, HomeAccountNav, HomePrimaryAction, HomeSessionNotice, HomeAccountFooter } from "@/components/HomeSession";
 
 export const metadata: Metadata = {
   title: "Gerador de Amigo Secreto grátis - Organize sua troca de presentes online",
@@ -169,14 +170,14 @@ export default function Home() {
     ]
   };
 
-  return <div className="landing">
+  return <HomeSessionProvider><div className="landing">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppStructuredData) }} />
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }} />
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToStructuredData) }} />
-    <header className="public-header"><Brand /><nav className="public-nav" aria-label="Navegação principal"><Link href="/groups" className="ui-link">Meus grupos</Link><Link href="/login" className="ui-btn ui-btn-primary">Fazer login <Icon name="arrow" /></Link></nav></header>
+    <header className="public-header"><Brand /><HomeAccountNav /></header>
     <main>
       <section className="landing-hero">
-        <div className="hero-copy"><span className="eyebrow">PARA QUEM GOSTA DE SURPREENDER</span><h1 aria-label="Gerador de Amigo Secreto">Gerador de<br /><span>Amigo Secreto.</span></h1><p>Menos organização, mais boas surpresas. Reúna seus amigos, faça o sorteio e deixe a troca de presentes por nossa conta.</p><div className="hero-buttons"><Link href="/login" className="ui-btn ui-btn-primary">Fazer login para entrar no grupo <Icon name="arrow" /></Link><Link href="/create" className="ui-btn ui-btn-secondary">Criar novo grupo <Icon name="plus" /></Link></div><span className="hero-footnote"><Icon name="check" />Grátis para grupos de até 10 pessoas. Feito para celebrar juntos.</span></div>
+        <div className="hero-copy"><span className="eyebrow">PARA QUEM GOSTA DE SURPREENDER</span><h1 aria-label="Gerador de Amigo Secreto">Gerador de<br /><span>Amigo Secreto.</span></h1><p>Menos organização, mais boas surpresas. Reúna seus amigos, faça o sorteio e deixe a troca de presentes por nossa conta.</p><div className="hero-buttons"><HomePrimaryAction /><Link href="/create" className="ui-btn ui-btn-secondary">Criar novo grupo <Icon name="plus" /></Link></div><HomeSessionNotice /><span className="hero-footnote"><Icon name="check" />Grátis para grupos de até 10 pessoas. Feito para celebrar juntos.</span></div>
         <div className="hero-visual"><div className="hero-visual-label"><span>PEQUENOS GESTOS</span><span>GRANDES CONEXÕES</span></div><GiftScene /><div className="hero-ticket"><span className="stat-icon"><Icon name="heart" /></span><div><strong>O melhor presente é estar perto.</strong><p>A surpresa começa com um convite.</p></div><Icon name="sparkles" /></div></div>
       </section>
       <div className="landing-actions">
@@ -192,6 +193,6 @@ export default function Home() {
       <section className="landing-section"><div className="landing-plan"><div><h2>Uma celebração que cabe no seu grupo.</h2><p>Até 10 participantes, grátis. Para grupos maiores, participantes ilimitados por US$ 10, em pagamento único.</p></div><Link href="/create" className="ui-btn ui-btn-primary">Começar meu grupo <Icon name="arrow" /></Link></div></section>
       <section className="landing-section"><div className="landing-section-header"><div><span className="eyebrow">PODE PERGUNTAR</span><h2>Antes de começar</h2></div></div><div className="faq-grid">{faqs.map((faq, index) => <details key={index}><summary>{faq.q}</summary><p>{faq.a}</p></details>)}</div></section>
     </main>
-    <footer className="public-footer"><Brand /><p>Boas surpresas aproximam pessoas.</p><nav aria-label="Links do rodapé"><Link href="/login">Entrar na conta</Link><Link href="/join">Abrir convite</Link></nav></footer>
-  </div>;
+    <footer className="public-footer"><Brand /><p>Boas surpresas aproximam pessoas.</p><nav aria-label="Links do rodapé"><HomeAccountFooter /><Link href="/join">Abrir convite</Link></nav></footer>
+  </div></HomeSessionProvider>;
 }

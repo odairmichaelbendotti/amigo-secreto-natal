@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
-import { SessionData } from "@/lib/session";
-
-const sessionOptions = {
-  password: process.env.SESSION_SECRET || "this-is-a-development-only-secret-that-must-be-changed",
-  cookieName: "secret-santa-session",
-  cookieOptions: {
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    sameSite: "lax" as const,
-  },
-};
+import type { SessionData } from "@/lib/session";
+import { sessionOptions } from "@/lib/session-options";
 
 // Routes that require participant authentication
 const participantApiRoutes = [
